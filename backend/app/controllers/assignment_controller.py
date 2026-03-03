@@ -1,0 +1,31 @@
+from fastapi import APIRouter, Depends
+from typing import List
+
+from app.schemas.assignment_schema import AssignmentCreate, AssignmentUpdate, AssignmentResponse
+from app.services import assignment_service
+from app.middleware.role_middleware import get_current_user, require_role
+
+router = APIRouter(prefix="/assignments", tags=["Asset Assignments"])
+
+@router.get("/", response_model=List[AssignmentResponse])
+def get_all_assignments(current_user: dict = Depends(get_current_user)):
+    return assignment_service.get_assignments(current_user)
+
+@router.get("/{assignment_id}", response_model=AssignmentResponse)
+def get_assignment(assignment_id: int, current_user: dict = Depends(get_current_user)):
+    return assignment_service.get_assignment(assignment_id)
+
+@router.post("/", response_model=AssignmentResponse)
+def create_assignment(
+    assignment_data: AssignmentCreate, 
+    current_user: dict = Depends(require_role(["Admin", "Asset Manager"]))
+):
+    return assignment_service.create_assignment(assignment_data, current_user)
+
+@router.put("/{assignment_id}", response_model=AssignmentResponse)
+def update_assignment(
+    assignment_id: int, 
+    assignment_data: AssignmentUpdate, 
+    current_user: dict = Depends(require_role(["Admin", "Asset Manager"]))
+):
+    return assignment_service.update_assignment(assignment_id, assignment_data)
