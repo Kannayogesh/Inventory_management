@@ -9,8 +9,12 @@ class AssignmentBase(BaseModel):
     condition_at_issue: Optional[str] = Field(None, pattern="^(New|Good|Fair|Damaged)$")
     remarks: Optional[str] = Field(None, max_length=500)
 
-class AssignmentCreate(AssignmentBase):
-    pass
+class AssignmentCreate(BaseModel):
+    asset_id: int
+    employee_code: str
+    expected_return_date: Optional[date] = None
+    condition_at_issue: Optional[str] = Field(None, pattern="^(New|Good|Fair|Damaged)$")
+    remarks: Optional[str] = Field(None, max_length=500)
 
 class AssignmentUpdate(BaseModel):
     expected_return_date: Optional[date] = None

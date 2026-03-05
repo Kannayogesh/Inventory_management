@@ -3,7 +3,7 @@ import { createAssignment, createMaintenanceRequest } from "../api";
 
 const ActionManagerModal = ({ asset, close, onRefresh }) => {
     const [action, setAction] = useState("assign");
-    const [userId, setUserId] = useState("");
+    const [employeeCode, setEmployeeCode] = useState("");
     const [expectedReturnDate, setExpectedReturnDate] = useState("");
     const [condition, setCondition] = useState(asset.condition_status || "Good");
 
@@ -19,7 +19,7 @@ const ActionManagerModal = ({ asset, close, onRefresh }) => {
             if (action === "assign") {
                 await createAssignment({
                     asset_id: asset.asset_id,
-                    user_id: parseInt(userId),
+                    employee_code: employeeCode.trim(),
                     expected_return_date: expectedReturnDate || null,
                     condition_at_issue: condition,
                     remarks: "Assigned via Admin Dashboard"
@@ -60,10 +60,10 @@ const ActionManagerModal = ({ asset, close, onRefresh }) => {
                     {action === "assign" && (
                         <>
                             <input
-                                type="number"
-                                placeholder="User ID to assign to"
-                                value={userId}
-                                onChange={(e) => setUserId(e.target.value)}
+                                type="text"
+                                placeholder="Employee ID to assign to"
+                                value={employeeCode}
+                                onChange={(e) => setEmployeeCode(e.target.value)}
                                 required
                                 style={styles.input}
                             />

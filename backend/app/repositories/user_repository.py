@@ -1,6 +1,33 @@
 from app.core.database import get_db_connection
 
 
+def get_user_by_employee_code(employee_code: str):
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    cursor.execute("SELECT user_id, employee_code, full_name, email, phone, password_hash, role, designation, department, location, joining_date, status FROM Users WHERE employee_code = ?", (employee_code,))
+
+    row = cursor.fetchone()
+    conn.close()
+
+    if row:
+        return {
+            "user_id": row.user_id,
+            "employee_code": row.employee_code,
+            "full_name": row.full_name,
+            "email": row.email,
+            "phone": row.phone,
+            "password": row.password_hash,
+            "role": row.role,
+            "designation": row.designation,
+            "department": row.department,
+            "location": row.location,
+            "joining_date": row.joining_date,
+            "status": row.status,
+        }
+
+    return None
+
 def get_user_by_email(email: str):
     conn = get_db_connection()
     cursor = conn.cursor()

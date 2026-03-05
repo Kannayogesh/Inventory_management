@@ -53,6 +53,7 @@ export const deleteAsset = (id) => apiFetch(`/assets/${id}`, { method: "DELETE" 
 export const getAssignments = () => apiFetch("/assignments/");
 export const createAssignment = (data) => apiFetch("/assignments/", { method: "POST", body: JSON.stringify(data) });
 export const updateAssignment = (id, data) => apiFetch(`/assignments/${id}`, { method: "PUT", body: JSON.stringify(data) });
+export const sendAssignmentReminder = (id) => apiFetch(`/assignments/${id}/remind`, { method: "POST" });
 
 // Maintenance
 export const getMaintenanceRequests = () => apiFetch("/maintenance/");

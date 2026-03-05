@@ -64,4 +64,22 @@ def update_request(maintenance_id: int, request_data: MaintenanceUpdate, backgro
         # We need the user email to notify them
         user = user_repository.get_user_by_email(request["reported_by"]) # assumes ID fetching added later if needed, passing blank for now if none (needs user ID to email match)
         
+        # In current repo, reported_by is the user_id integer.
+        conn = user_repository.get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute("SELECT full_name, email FROM Users WHERE user_id = ?", (request["reported_by"],))
+        user_row = cursor.fetchone()
+        conn.close()
+
+        if user_row:
+            user_full_name = getattr(user_row, 'full_name', user_row[0])
+            user_email = getattr(user_row, 'email', user_row[1])
+
+            background_tasks.add_task(
+                send_email_background_task,
+                title=f"Maintenance Resolved - Asset #{request['asset_id']}",
+                body=f"Hello {user_full_name},\n\nThe maintenance request for the asset you reported has been resolved.",
+                recipient=user_email
+            )
+        
     return request

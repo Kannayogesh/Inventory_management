@@ -13,6 +13,12 @@ class Settings(BaseSettings):
     # Database
     DATABASE_URL: str = "DRIVER={ODBC Driver 18 for SQL Server};SERVER=localhost;DATABASE=ITInventoryDB;Trusted_Connection=yes;TrustServerCertificate=yes;"
 
+    # SMTP Configuration
+    SMTP_SERVER: str | None = None
+    SMTP_PORT: int = 587
+    SMTP_USER: str | None = None
+    SMTP_PASSWORD: str | None = None
+
     class Config:
         env_file = ".env"
         extra = "ignore"

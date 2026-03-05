@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, BackgroundTasks
 from typing import List
 
 from app.schemas.assignment_schema import AssignmentCreate, AssignmentUpdate, AssignmentResponse
@@ -18,14 +18,24 @@ def get_assignment(assignment_id: int, current_user: dict = Depends(get_current_
 @router.post("/", response_model=AssignmentResponse)
 def create_assignment(
     assignment_data: AssignmentCreate, 
+    background_tasks: BackgroundTasks,
     current_user: dict = Depends(require_role(["Admin", "Asset Manager"]))
 ):
-    return assignment_service.create_assignment(assignment_data, current_user)
+    return assignment_service.create_assignment(assignment_data, current_user, background_tasks)
 
 @router.put("/{assignment_id}", response_model=AssignmentResponse)
 def update_assignment(
     assignment_id: int, 
     assignment_data: AssignmentUpdate, 
+    background_tasks: BackgroundTasks,
     current_user: dict = Depends(require_role(["Admin", "Asset Manager"]))
 ):
-    return assignment_service.update_assignment(assignment_id, assignment_data)
+    return assignment_service.update_assignment(assignment_id, assignment_data, background_tasks)
+
+@router.post("/{assignment_id}/remind")
+def send_confirmation_reminder(
+    assignment_id: int, 
+    background_tasks: BackgroundTasks,
+    current_user: dict = Depends(require_role(["Admin", "Asset Manager"]))
+):
+    return assignment_service.send_confirmation_reminder(assignment_id, background_tasks)
