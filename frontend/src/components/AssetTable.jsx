@@ -1,50 +1,96 @@
-const AssetTable = ({ assets, onEdit, onDelete, onTransaction }) => {
-    return (
-        <table className="asset-table">
-            <thead>
-                <tr>
-                    <th>Asset Tag</th>
-                    <th>Name / Model</th>
-                    <th>Serial No</th>
-                    <th>Status</th>
-                    <th>Condition</th>
-                    <th>Location</th>
-                    <th>Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                {assets.map((asset) => (
-                    <tr key={asset.asset_id}>
-                        <td>{asset.asset_tag}</td>
-                        <td>{asset.brand} {asset.model}</td>
-                        <td>{asset.serial_number || "-"}</td>
-                        <td>{asset.status}</td>
-                        <td>{asset.condition_status}</td>
-                        <td>{asset.location || "-"}</td>
-                        <td className="actions" style={styles.actions}>
-                            <button onClick={() => onEdit(asset)}>Edit</button>
-                            <button onClick={() => onDelete(asset.asset_id)}>Delete</button>
-                            <button onClick={() => onTransaction(asset)}>Manage</button>
-                        </td>
-                    </tr>
-                ))}
-                {assets.length === 0 && (
-                    <tr>
-                        <td colSpan="7" style={{ textAlign: "center", padding: "10px" }}>
-                            No assets found
-                        </td>
-                    </tr>
-                )}
-            </tbody>
-        </table>
-    );
+const statusBadge = (status) => {
+  const s = (status || "").toLowerCase();
+  if (s === "available") return <span className="badge badge-success">{status}</span>;
+  if (s === "assigned") return <span className="badge badge-info">{status}</span>;
+  if (s === "maintenance") return <span className="badge badge-warning">{status}</span>;
+  if (s === "retired") return <span className="badge badge-muted">{status}</span>;
+  return <span className="badge badge-muted">{status || "Unknown"}</span>;
 };
 
-const styles = {
-    actions: {
-        display: "flex",
-        gap: "10px",
-    },
+const conditionBadge = (condition) => {
+  const c = (condition || "").toLowerCase();
+  if (c === "new") return <span className="badge badge-success">{condition}</span>;
+  if (c === "good") return <span className="badge badge-info">{condition}</span>;
+  if (c === "fair") return <span className="badge badge-warning">{condition}</span>;
+  if (c === "damaged") return <span className="badge badge-danger">{condition}</span>;
+  return <span className="badge badge-muted">{condition || "-"}</span>;
+};
+
+const AssetTable = ({ assets, onEdit, onDelete, onTransaction }) => {
+  return (
+    <div className="table-container">
+      <div style={{ overflowX: "auto" }}>
+        <table>
+          <thead>
+            <tr>
+              <th>Asset Tag</th>
+              <th>Brand / Model</th>
+              <th>Serial No</th>
+              <th>Status</th>
+              <th>Condition</th>
+              <th>Location</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {assets.map((asset) => (
+              <tr key={asset.asset_id}>
+                <td>
+                  <span className="td-mono">{asset.asset_tag}</span>
+                </td>
+                <td>
+                  <span className="td-bold">{asset.brand}</span>
+                  {asset.model && (
+                    <span className="td-muted"> {asset.model}</span>
+                  )}
+                </td>
+                <td className="td-muted">{asset.serial_number || "—"}</td>
+                <td>{statusBadge(asset.status)}</td>
+                <td>{conditionBadge(asset.condition_status)}</td>
+                <td className="td-muted">{asset.location || "—"}</td>
+                <td>
+                  <div className="action-btn-group">
+                    <button
+                      className="btn btn-ghost btn-sm btn-icon"
+                      onClick={() => onEdit(asset)}
+                      title="Edit asset"
+                    >
+                      ✏️
+                    </button>
+                    <button
+                      className="btn btn-ghost btn-sm btn-icon"
+                      onClick={() => onTransaction(asset)}
+                      title="Manage asset"
+                      style={{ fontSize: "14px" }}
+                    >
+                      ⚙️
+                    </button>
+                    <button
+                      className="btn btn-danger btn-sm btn-icon"
+                      onClick={() => onDelete(asset.asset_id)}
+                      title="Delete asset"
+                    >
+                      🗑️
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            ))}
+            {assets.length === 0 && (
+              <tr>
+                <td colSpan="7">
+                  <div className="empty-state">
+                    <div className="empty-icon">📭</div>
+                    <p>No assets found</p>
+                  </div>
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
 };
 
 export default AssetTable;

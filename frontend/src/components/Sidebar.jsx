@@ -1,43 +1,58 @@
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { useContext } from "react";
 import { AuthContext } from "../context/AuthContext";
 
 const Sidebar = () => {
   const { user } = useContext(AuthContext);
-  const isAdminOrManager = user?.role === "Admin" || user?.role === "Manager" || user?.role === "Storekeeper";
+  const location = useLocation();
+  const isAdminOrManager = user?.role === "Admin" || user?.role === "Asset Manager";
+
+  const isActive = (path) => location.pathname === path;
 
   return (
-    <div style={styles.sidebar}>
+    <aside className="sidebar">
       {isAdminOrManager && (
         <>
-          <Link to="/dashboard">Admin Dashboard</Link>
-          <a href="/dashboard.html" target="_blank" rel="noopener noreferrer" style={styles.externalLink}>📊 Analytics & Exports</a>
+          <span className="sidebar-label">Management</span>
+          <Link
+            to="/dashboard"
+            className={`sidebar-link${isActive("/dashboard") ? " active" : ""}`}
+          >
+            <span className="link-icon">🏠</span>
+            Dashboard
+          </Link>
+          <a
+            href="/dashboard.html"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="sidebar-link"
+          >
+            <span className="link-icon">📊</span>
+            Analytics
+          </a>
+          <Link
+            to="/register"
+            className={`sidebar-link${isActive("/register") ? " active" : ""}`}
+          >
+            <span className="link-icon">👤</span>
+            Add User
+          </Link>
         </>
       )}
-      {!isAdminOrManager && <Link to="/user-dashboard">My Assets</Link>}
-    </div>
+      {!isAdminOrManager && (
+        <>
+          <span className="sidebar-label">My Workspace</span>
+          <Link
+            to="/user-dashboard"
+            className={`sidebar-link${isActive("/user-dashboard") ? " active" : ""}`}
+          >
+            <span className="link-icon">🖥️</span>
+            My Assets
+          </Link>
+        </>
+      )}
+    </aside>
   );
-};
-
-const styles = {
-  sidebar: {
-    width: "200px",
-    background: "#f1f5f9",
-    height: "100vh",
-    padding: "20px",
-    display: "flex",
-    flexDirection: "column",
-    gap: "15px",
-  },
-  externalLink: {
-    color: "#2563eb",
-    textDecoration: "none",
-    fontWeight: "bold",
-    marginTop: "10px",
-    display: "flex",
-    alignItems: "center",
-    gap: "5px"
-  }
 };
 
 export default Sidebar;
