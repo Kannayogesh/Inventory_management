@@ -54,6 +54,7 @@ export const getAssignments = () => apiFetch("/assignments/");
 export const createAssignment = (data) => apiFetch("/assignments/", { method: "POST", body: JSON.stringify(data) });
 export const updateAssignment = (id, data) => apiFetch(`/assignments/${id}`, { method: "PUT", body: JSON.stringify(data) });
 export const sendAssignmentReminder = (id) => apiFetch(`/assignments/${id}/remind`, { method: "POST" });
+export const returnAssignment = (id, data) => apiFetch(`/assignments/${id}/return`, { method: "POST", body: JSON.stringify(data) });
 
 // Maintenance
 export const getMaintenanceRequests = () => apiFetch("/maintenance/");

@@ -1,6 +1,6 @@
 from fastapi import HTTPException, status, BackgroundTasks
 from app.repositories import assignment_repository, asset_repository, user_repository
-from app.schemas.assignment_schema import AssignmentCreate, AssignmentUpdate
+from app.schemas.assignment_schema import AssignmentCreate, AssignmentUpdate, ReturnRequest
 from app.services.email_service import send_email_background_task
 
 def get_assignments(current_user: dict):
@@ -146,3 +146,36 @@ def send_confirmation_reminder(assignment_id: int, background_tasks: BackgroundT
         return {"message": "Reminder email scheduled successfully"}
     else:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User or Asset not found")
+
+def return_assignment(assignment_id: int, return_data: ReturnRequest, current_user: dict, background_tasks: BackgroundTasks):
+    assignment = get_assignment(assignment_id)
+    
+    # Permission check: Employees can only return their own assignments. Admin/Asset Managers can return any.
+    if current_user.get("role") == "Employee" and assignment["user_id"] != current_user.get("user_id"):
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="You can only return your own assigned assets.")
+    
+    if assignment["status"] == "Completed" or assignment.get("returned_date"):
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Asset is already returned.")
+
+    from datetime import date
+    
+    # Prepare update data
+    # We use a dict here because we'll pass it to assignment_repository.update_assignment
+    # while also triggering the email logic in update_assignment if we call it, 
+    # OR we just implement the email trigger here. 
+    # Let's call update_assignment to keep it consistent.
+    
+    # We need to create an AssignmentUpdate object for update_assignment
+    update_data = AssignmentUpdate(
+        returned_date=date.today(),
+        condition_at_return=return_data.condition_at_return,
+        status="Completed"
+    )
+    
+    # Combine remarks
+    final_remarks = assignment.get("remarks") or ""
+    if return_data.remarks:
+        final_remarks = f"{final_remarks} | Return Note: {return_data.remarks}"
+    update_data.remarks = final_remarks
+    
+    return update_assignment(assignment_id, update_data, background_tasks)

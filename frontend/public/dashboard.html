@@ -1,0 +1,525 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Inventory Dashboard</title>
+
+    <!-- Bootstrap -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+
+    <!-- SheetJS (Excel export) -->
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+
+    <!-- jsPDF + AutoTable (PDF export) -->
+    <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jspdf-autotable@3.5.31/dist/jspdf.plugin.autotable.min.js"></script>
+
+    <style>
+        body {
+            background: #f6f7fb;
+        }
+
+        .card-kpi {
+            border: 0;
+            box-shadow: 0 6px 18px rgba(0, 0, 0, .06);
+            border-radius: 14px;
+        }
+
+        .table-wrap {
+            box-shadow: 0 6px 18px rgba(0, 0, 0, .06);
+            border-radius: 14px;
+            overflow: hidden;
+        }
+
+        .badge-soft {
+            font-weight: 600;
+        }
+
+        .muted-hint {
+            font-size: 12px;
+            color: #6c757d;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container py-4">
+
+        <!-- Header -->
+        <div class="d-flex flex-wrap justify-content-between align-items-center mb-4">
+            <div>
+                <h2 class="fw-bold mb-1">Inventory Dashboard</h2>
+                <div class="text-muted">Welcome System Administrator (Admin)</div>
+            </div>
+            <div class="d-flex gap-2 mt-3 mt-md-0">
+                <button class="btn btn-primary" onclick="alert('Connect to Add Asset page')">Register New Asset</button>
+                <button class="btn btn-outline-primary" onclick="alert('Connect to Add User page')">Register New
+                    User</button>
+            </div>
+        </div>
+
+        <!-- Token Box -->
+        <div class="card card-kpi mb-4">
+            <div class="card-body">
+                <div class="fw-semibold mb-2">Authentication (JWT Token)</div>
+                <div class="d-flex flex-wrap gap-2 align-items-center">
+                    <input id="tokenBox" class="form-control" style="max-width: 720px"
+                        placeholder="Paste JWT token here (you can paste only token OR 'Bearer token')" />
+                    <button class="btn btn-dark" onclick="saveToken()">Save Token</button>
+                    <button class="btn btn-outline-dark" onclick="clearToken()">Clear</button>
+                    <button class="btn btn-outline-primary ms-auto" onclick="loadAll()">Refresh</button>
+                </div>
+                <div class="muted-hint mt-2">
+                    Tip: Get token from <code>http://127.0.0.1:8000/docs</code> → POST <code>/api/login</code> → copy
+                    token.
+                </div>
+            </div>
+        </div>
+
+        <!-- KPI Cards -->
+        <div class="row g-3 mb-4">
+            <div class="col-6 col-md-4 col-lg">
+                <div class="card card-kpi">
+                    <div class="card-body">
+                        <div class="text-muted small">Total Assets</div>
+                        <div class="fs-2 fw-bold" id="kpiTotal">0</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-6 col-md-4 col-lg">
+                <div class="card card-kpi">
+                    <div class="card-body">
+                        <div class="text-muted small">Available</div>
+                        <div class="fs-2 fw-bold" id="kpiAvail">0</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-6 col-md-4 col-lg">
+                <div class="card card-kpi">
+                    <div class="card-body">
+                        <div class="text-muted small">Assigned</div>
+                        <div class="fs-2 fw-bold" id="kpiAssigned">0</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-6 col-md-4 col-lg">
+                <div class="card card-kpi">
+                    <div class="card-body">
+                        <div class="text-muted small">Maintenance</div>
+                        <div class="fs-2 fw-bold" id="kpiMaint">0</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-6 col-md-4 col-lg">
+                <div class="card card-kpi">
+                    <div class="card-body">
+                        <div class="text-muted small">Retired</div>
+                        <div class="fs-2 fw-bold" id="kpiRetired">0</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Charts -->
+        <div class="row g-3 mb-4">
+            <div class="col-lg-4">
+                <div class="card card-kpi">
+                    <div class="card-body">
+                        <div class="fw-semibold mb-2">Status Distribution</div>
+                        <canvas id="chartStatus"></canvas>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-4">
+                <div class="card card-kpi">
+                    <div class="card-body">
+                        <div class="fw-semibold mb-2">Department-wise Assigned</div>
+                        <canvas id="chartDept"></canvas>
+                        <div class="muted-hint mt-2">Note: requires assignments API to return department.</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-4">
+                <div class="card card-kpi">
+                    <div class="card-body">
+                        <div class="fw-semibold mb-2">Purchase Cost Trend</div>
+                        <canvas id="chartCost"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Export Buttons -->
+        <div class="d-flex flex-wrap gap-2 mb-3">
+            <button class="btn btn-outline-secondary" onclick="exportCSV()">Export CSV</button>
+            <button class="btn btn-outline-success" onclick="exportExcel()">Export Excel</button>
+            <button class="btn btn-outline-danger" onclick="exportPDF()">Export PDF</button>
+        </div>
+
+        <!-- Assets Table -->
+        <div class="table-wrap bg-white">
+            <div class="p-3 border-bottom d-flex flex-wrap gap-2 align-items-center">
+                <div class="fw-semibold">Assets Library</div>
+                <input class="form-control ms-auto" style="max-width: 320px" id="searchBox"
+                    placeholder="Search asset tag / brand / model..." oninput="renderTable()" />
+            </div>
+
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0" id="assetsTable">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Asset Tag</th>
+                            <th>Brand / Model</th>
+                            <th>Serial No</th>
+                            <th>Status</th>
+                            <th>Assigned To (Employee ID)</th>
+                            <th>Condition</th>
+                            <th>Location</th>
+                            <th>Purchase Cost</th>
+                            <th>Warranty Expiry</th>
+                        </tr>
+                    </thead>
+                    <tbody id="assetsTbody">
+                        <tr>
+                            <td colspan="9" class="text-center text-muted py-4">Load data using token.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="muted-hint mt-3">
+            If you see “Not authenticated”, paste token and click <b>Save Token</b>.
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = "http://127.0.0.1:8000/api";
+
+        let assets = [];
+        let assignments = [];
+
+        // Map asset_id / asset_tag -> user_id (employee id)
+        let assignedUserIdByAssetId = new Map();
+        let assignedUserIdByAssetTag = new Map();
+
+        let statusChart, deptChart, costChart;
+
+        function saveToken() {
+            const t = (document.getElementById("tokenBox").value || "").trim();
+            if (!t) { alert("Please paste token"); return; }
+            localStorage.setItem("token", t);
+            alert("Token saved ✅");
+            loadAll();
+        }
+
+        function clearToken() {
+            localStorage.removeItem("token");
+            document.getElementById("tokenBox").value = "";
+            alert("Token cleared");
+        }
+
+        function getAuthHeaders() {
+            const token = (localStorage.getItem("token") || "").trim();
+            if (!token) return {};
+            const value = token.startsWith("Bearer ") ? token : `Bearer ${token}`;
+            return { "Authorization": value };
+        }
+
+        (function initTokenBox() {
+            const saved = localStorage.getItem("token");
+            if (saved) document.getElementById("tokenBox").value = saved;
+        })();
+
+        // Build map from assignments -> which user_id currently has an asset
+        function buildAssignmentMaps() {
+            assignedUserIdByAssetId.clear();
+            assignedUserIdByAssetTag.clear();
+
+            for (const x of assignments) {
+                const assetId = x.asset_id ?? x.assetId ?? null;
+                const assetTag = x.asset_tag ?? x.assetTag ?? null;
+
+                const userId = x.user_id ?? x.userId ?? x.employee_id ?? x.employeeId ?? null;
+
+                const st = (x.status ?? x.assignment_status ?? "").toString().toLowerCase();
+                const isActive =
+                    st === "active" ||
+                    st === "assigned" ||
+                    st === "pending" ||
+                    (!x.returned_date && !x.returnedDate && !x.returned_at);
+
+                if (!isActive) continue;
+                if (userId === null || userId === undefined) continue;
+
+                if (assetId !== null && assetId !== undefined) assignedUserIdByAssetId.set(String(assetId), String(userId));
+                if (assetTag) assignedUserIdByAssetTag.set(String(assetTag), String(userId));
+            }
+        }
+
+        async function loadAll() {
+            try {
+                const headers = getAuthHeaders();
+                if (!headers.Authorization) {
+                    document.getElementById("assetsTbody").innerHTML =
+                        `<tr><td colspan="9" class="text-center text-muted py-4">
+            Please paste JWT token and click <b>Save Token</b>.
+          </td></tr>`;
+                    return;
+                }
+
+                const [assetsRes, assignRes] = await Promise.all([
+                    fetch(`${API_BASE}/assets/`, { headers }),
+                    fetch(`${API_BASE}/assignments/`, { headers })
+                ]);
+
+                if (!assetsRes.ok) {
+                    const t = await safeText(assetsRes);
+                    throw new Error(`Assets API failed: ${assetsRes.status} ${t}`);
+                }
+
+                assets = await assetsRes.json();
+                assignments = assignRes.ok ? await assignRes.json() : [];
+
+                buildAssignmentMaps();
+
+                computeKPIs();
+                renderCharts();
+                renderTable();
+
+            } catch (err) {
+                console.error(err);
+                document.getElementById("assetsTbody").innerHTML =
+                    `<tr><td colspan="9" class="text-center text-danger py-4">
+          Failed to load data. ${escapeHtml(err.message)}
+        </td></tr>`;
+                setKPIs(0, 0, 0, 0, 0);
+                destroyCharts();
+            }
+        }
+
+        async function safeText(res) {
+            try { return await res.text(); } catch { return ""; }
+        }
+
+        function setKPIs(total, available, assigned, maintenance, retired) {
+            document.getElementById("kpiTotal").textContent = total;
+            document.getElementById("kpiAvail").textContent = available;
+            document.getElementById("kpiAssigned").textContent = assigned;
+            document.getElementById("kpiMaint").textContent = maintenance;
+            document.getElementById("kpiRetired").textContent = retired;
+        }
+
+        function computeKPIs() {
+            const total = assets.length;
+            const available = assets.filter(a => (a.status || "").toLowerCase() === "available").length;
+            const assigned = assets.filter(a => (a.status || "").toLowerCase() === "assigned").length;
+            const maintenance = assets.filter(a => (a.status || "").toLowerCase() === "maintenance").length;
+            const retired = assets.filter(a => (a.status || "").toLowerCase() === "retired").length;
+            setKPIs(total, available, assigned, maintenance, retired);
+        }
+
+        function destroyCharts() {
+            if (statusChart) statusChart.destroy();
+            if (deptChart) deptChart.destroy();
+            if (costChart) costChart.destroy();
+            statusChart = deptChart = costChart = null;
+        }
+
+        function renderCharts() {
+            destroyCharts();
+
+            const statusCounts = {};
+            for (const a of assets) {
+                const s = a.status || "Unknown";
+                statusCounts[s] = (statusCounts[s] || 0) + 1;
+            }
+            statusChart = new Chart(document.getElementById("chartStatus"), {
+                type: "pie",
+                data: { labels: Object.keys(statusCounts), datasets: [{ data: Object.values(statusCounts) }] },
+                options: { responsive: true }
+            });
+
+            const deptCounts = {};
+            for (const x of assignments) {
+                const dept = x.department || x.user_department || x.dept || "Unknown";
+                deptCounts[dept] = (deptCounts[dept] || 0) + 1;
+            }
+            deptChart = new Chart(document.getElementById("chartDept"), {
+                type: "bar",
+                data: { labels: Object.keys(deptCounts), datasets: [{ data: Object.values(deptCounts) }] },
+                options: { responsive: true, plugins: { legend: { display: false } } }
+            });
+
+            const byDate = {};
+            for (const a of assets) {
+                const d = a.purchase_date || "Unknown";
+                const cost = Number(a.purchase_cost || 0);
+                byDate[d] = (byDate[d] || 0) + cost;
+            }
+            const dates = Object.keys(byDate).sort();
+            const costs = dates.map(d => byDate[d]);
+
+            costChart = new Chart(document.getElementById("chartCost"), {
+                type: "line",
+                data: { labels: dates, datasets: [{ data: costs }] },
+                options: { responsive: true }
+            });
+        }
+
+        function renderTable() {
+            const q = (document.getElementById("searchBox").value || "").toLowerCase().trim();
+
+            const filtered = assets.filter(a => {
+                const hay = `${a.asset_tag || ""} ${a.brand || ""} ${a.model || ""} ${a.serial_number || ""} ${a.location || ""}`.toLowerCase();
+                return !q || hay.includes(q);
+            });
+
+            const rows = filtered.map(a => {
+                const assetId = a.asset_id ?? a.assetId ?? "";
+                const assetTag = a.asset_tag ?? a.assetTag ?? "";
+
+                const assignedToId =
+                    assignedUserIdByAssetId.get(String(assetId)) ||
+                    assignedUserIdByAssetTag.get(String(assetTag)) ||
+                    "—";
+
+                return `
+        <tr>
+          <td class="fw-semibold">${escapeHtml(assetTag)}</td>
+          <td>${escapeHtml(((a.brand || "") + " " + (a.model || "")).trim())}</td>
+          <td>${escapeHtml(a.serial_number || "")}</td>
+          <td>${badgeHtml(a.status)}</td>
+          <td>${escapeHtml(assignedToId)}</td>
+          <td>${escapeHtml(a.condition_status || "")}</td>
+          <td>${escapeHtml(a.location || "")}</td>
+          <td>${escapeHtml(a.purchase_cost ?? "")}</td>
+          <td>${escapeHtml(a.warranty_expiry || "")}</td>
+        </tr>
+      `;
+            }).join("");
+
+            document.getElementById("assetsTbody").innerHTML =
+                rows || `<tr><td colspan="9" class="text-center text-muted py-4">No data</td></tr>`;
+        }
+
+        function badgeHtml(status) {
+            const s = (status || "Unknown");
+            const l = s.toLowerCase();
+            let cls = "bg-secondary";
+            if (l.includes("available")) cls = "bg-success";
+            else if (l.includes("assigned")) cls = "bg-primary";
+            else if (l.includes("maintenance")) cls = "bg-warning text-dark";
+            else if (l.includes("retired")) cls = "bg-dark";
+            return `<span class="badge ${cls} badge-soft">${escapeHtml(s)}</span>`;
+        }
+
+        function exportCSV() {
+            if (!assets.length) { alert("No data to export"); return; }
+
+            const headers = ["asset_tag", "brand", "model", "serial_number", "status", "assigned_to_employee_id", "condition_status", "location", "purchase_cost", "purchase_date", "warranty_expiry"];
+            const lines = [headers.join(",")];
+
+            for (const a of assets) {
+                const assetId = a.asset_id ?? a.assetId ?? "";
+                const assetTag = a.asset_tag ?? a.assetTag ?? "";
+                const assignedToId =
+                    assignedUserIdByAssetId.get(String(assetId)) ||
+                    assignedUserIdByAssetTag.get(String(assetTag)) ||
+                    "";
+
+                const rowObj = { ...a, asset_tag: assetTag, assigned_to_employee_id: assignedToId };
+                const row = headers.map(h => csvCell(rowObj[h]));
+                lines.push(row.join(","));
+            }
+
+            downloadBlob(lines.join("\n"), "assets.csv", "text/csv");
+        }
+
+        function exportExcel() {
+            if (!assets.length) { alert("No data to export"); return; }
+
+            const exportRows = assets.map(a => {
+                const assetId = a.asset_id ?? a.assetId ?? "";
+                const assetTag = a.asset_tag ?? a.assetTag ?? "";
+                const assignedToId =
+                    assignedUserIdByAssetId.get(String(assetId)) ||
+                    assignedUserIdByAssetTag.get(String(assetTag)) ||
+                    "";
+
+                return { ...a, asset_tag: assetTag, assigned_to_employee_id: assignedToId };
+            });
+
+            const ws = XLSX.utils.json_to_sheet(exportRows);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "Assets");
+            XLSX.writeFile(wb, "assets.xlsx");
+        }
+
+        function exportPDF() {
+            if (!assets.length) { alert("No data to export"); return; }
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            doc.text("Inventory Assets Report", 14, 12);
+
+            const headers = [["Asset Tag", "Brand", "Model", "Serial", "Status", "Assigned To (Emp ID)", "Condition", "Location", "Cost", "Warranty"]];
+            const body = assets.map(a => {
+                const assetId = a.asset_id ?? a.assetId ?? "";
+                const assetTag = a.asset_tag ?? a.assetTag ?? "";
+                const assignedToId =
+                    assignedUserIdByAssetId.get(String(assetId)) ||
+                    assignedUserIdByAssetTag.get(String(assetTag)) ||
+                    "";
+
+                return [
+                    assetTag,
+                    a.brand || "",
+                    a.model || "",
+                    a.serial_number || "",
+                    a.status || "",
+                    assignedToId,
+                    a.condition_status || "",
+                    a.location || "",
+                    String(a.purchase_cost ?? ""),
+                    a.warranty_expiry || ""
+                ];
+            });
+
+            doc.autoTable({ head: headers, body, startY: 18, styles: { fontSize: 8 } });
+            doc.save("assets.pdf");
+        }
+
+        function downloadBlob(content, filename, mime) {
+            const blob = new Blob([content], { type: mime });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = filename;
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        function csvCell(v) {
+            const s = (v ?? "").toString().replaceAll('"', '""');
+            return `"${s}"`;
+        }
+
+        function escapeHtml(v) {
+            return (v ?? "").toString()
+                .replaceAll("&", "&amp;")
+                .replaceAll("<", "&lt;")
+                .replaceAll(">", "&gt;")
+                .replaceAll('"', "&quot;")
+                .replaceAll("'", "&#039;");
+        }
+
+        loadAll();
+    </script>
+</body>
+
+</html>

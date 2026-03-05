@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, BackgroundTasks
 from typing import List
 
-from app.schemas.assignment_schema import AssignmentCreate, AssignmentUpdate, AssignmentResponse
+from app.schemas.assignment_schema import AssignmentCreate, AssignmentUpdate, AssignmentResponse, ReturnRequest
 from app.services import assignment_service
 from app.middleware.role_middleware import get_current_user, require_role
 
@@ -39,3 +39,17 @@ def send_confirmation_reminder(
     current_user: dict = Depends(require_role(["Admin", "Asset Manager"]))
 ):
     return assignment_service.send_confirmation_reminder(assignment_id, background_tasks)
+
+@router.post("/{assignment_id}/return", response_model=AssignmentResponse)
+def return_assignment(
+    assignment_id: int, 
+    return_data: ReturnRequest, 
+    background_tasks: BackgroundTasks,
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    Allows a user to return an assigned asset.
+    Employees can only return their own assignments. Admin/Asset Managers can return any.
+    """
+    return assignment_service.return_assignment(assignment_id, return_data, current_user, background_tasks)
+

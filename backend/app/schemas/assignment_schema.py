@@ -32,3 +32,8 @@ class AssignmentResponse(AssignmentBase):
     condition_at_return: Optional[str] = None
     confirmation_status: str
     status: str
+
+class ReturnRequest(BaseModel):
+    returned_date: Optional[date] = None
+    condition_at_return: str = Field(..., pattern="^(New|Good|Fair|Damaged)$")
+    remarks: Optional[str] = Field(None, max_length=500)

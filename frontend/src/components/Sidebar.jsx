@@ -8,11 +8,13 @@ const Sidebar = () => {
 
   return (
     <div style={styles.sidebar}>
-      {isAdminOrManager ? (
-        <Link to="/dashboard">Admin Dashboard</Link>
-      ) : (
-        <Link to="/user-dashboard">My Assets</Link>
+      {isAdminOrManager && (
+        <>
+          <Link to="/dashboard">Admin Dashboard</Link>
+          <a href="/dashboard.html" target="_blank" rel="noopener noreferrer" style={styles.externalLink}>📊 Analytics & Exports</a>
+        </>
       )}
+      {!isAdminOrManager && <Link to="/user-dashboard">My Assets</Link>}
     </div>
   );
 };
@@ -27,6 +29,15 @@ const styles = {
     flexDirection: "column",
     gap: "15px",
   },
+  externalLink: {
+    color: "#2563eb",
+    textDecoration: "none",
+    fontWeight: "bold",
+    marginTop: "10px",
+    display: "flex",
+    alignItems: "center",
+    gap: "5px"
+  }
 };
 
 export default Sidebar;

@@ -3,11 +3,13 @@ import { AuthContext } from "../context/AuthContext";
 import { getAssignments, getMaintenanceRequests, getAsset } from "../api";
 import Navbar from "../components/Navbar";
 import Sidebar from "../components/Sidebar";
+import ReturnAssetModal from "../components/ReturnAssetModal";
 
 const EmployeeDashboard = () => {
     const { user } = useContext(AuthContext);
     const [assignments, setAssignments] = useState([]);
     const [requests, setRequests] = useState([]);
+    const [selectedAssignment, setSelectedAssignment] = useState(null);
 
     const fetchData = async () => {
         try {
@@ -65,6 +67,7 @@ const EmployeeDashboard = () => {
                                 <th>Assigned On</th>
                                 <th>Must Return By</th>
                                 <th>Status</th>
+                                <th>Actions</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -75,11 +78,21 @@ const EmployeeDashboard = () => {
                                     <td>{a.assigned_date}</td>
                                     <td>{a.expected_return_date || "-"}</td>
                                     <td>{a.status}</td>
+                                    <td>
+                                        {a.status === "Active" && (
+                                            <button
+                                                onClick={() => setSelectedAssignment(a)}
+                                                style={{ padding: "4px 8px", background: "#f44336", color: "white", border: "none", borderRadius: "4px", cursor: "pointer" }}
+                                            >
+                                                Return
+                                            </button>
+                                        )}
+                                    </td>
                                 </tr>
                             ))}
                             {assignments.length === 0 && (
                                 <tr>
-                                    <td colSpan="5" style={{ textAlign: "center", padding: "10px" }}>No assets assigned to you</td>
+                                    <td colSpan="6" style={{ textAlign: "center", padding: "10px" }}>No assets assigned to you</td>
                                 </tr>
                             )}
                         </tbody>
@@ -115,6 +128,14 @@ const EmployeeDashboard = () => {
                     </table>
                 </div>
             </div>
+
+            {selectedAssignment && (
+                <ReturnAssetModal
+                    assignment={selectedAssignment}
+                    close={() => setSelectedAssignment(null)}
+                    onRefresh={fetchData}
+                />
+            )}
         </div>
     );
 };
