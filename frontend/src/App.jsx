@@ -5,6 +5,8 @@ import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Dashboard from "./pages/Dashboard";
 import EmployeeDashboard from "./pages/EmployeeDashboard";
+import UserSearch from "./pages/UserSearch";
+import Assignments from "./pages/Assignments";
 import ProtectedRoute from "./routes/ProtectedRoute";
 
 function App() {
@@ -23,6 +25,14 @@ function App() {
               }
             />
             <Route
+              path="/user-search"
+              element={
+                <ProtectedRoute>
+                  <UserSearch />
+                </ProtectedRoute>
+              }
+            />
+            <Route
               path="/user-dashboard"
               element={
                 <ProtectedRoute>
@@ -35,6 +45,14 @@ function App() {
               element={
                 <ProtectedRoute>
                   <Dashboard />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/assignments"
+              element={
+                <ProtectedRoute>
+                  <Assignments />
                 </ProtectedRoute>
               }
             />

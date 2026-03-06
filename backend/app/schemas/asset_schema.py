@@ -16,6 +16,7 @@ class AssetBase(BaseModel):
     location: Optional[str] = Field(None, max_length=100)
     condition_status: str = Field("New", pattern="^(New|Good|Fair|Damaged)$")
     status: str = Field("Available", pattern="^(Available|Assigned|Maintenance|Retired)$")
+    invoice_path: Optional[str] = Field(None, max_length=500)
 
 class AssetCreate(AssetBase):
     pass
@@ -33,6 +34,7 @@ class AssetUpdate(BaseModel):
     location: Optional[str] = Field(None, max_length=100)
     condition_status: Optional[str] = Field(None, pattern="^(New|Good|Fair|Damaged)$")
     status: Optional[str] = Field(None, pattern="^(Available|Assigned|Maintenance|Retired)$")
+    invoice_path: Optional[str] = Field(None, max_length=500)
 
 class AssetResponse(AssetBase):
     asset_id: int

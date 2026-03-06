@@ -25,11 +25,25 @@ const Sidebar = () => {
             href="/dashboard.html"
             target="_blank"
             rel="noopener noreferrer"
-            className="sidebar-link"
+            className={`sidebar-link${location.search.includes("view=analytics") ? " active" : ""}`}
           >
             <span className="link-icon">📊</span>
             Analytics
           </a>
+          <Link
+            to="/assignments"
+            className={`sidebar-link${isActive("/assignments") ? " active" : ""}`}
+          >
+            <span className="link-icon">📋</span>
+            Assignments
+          </Link>
+          <Link
+            to="/user-search"
+            className={`sidebar-link${isActive("/user-search") ? " active" : ""}`}
+          >
+            <span className="link-icon">🔍</span>
+            User Search
+          </Link>
           <Link
             to="/register"
             className={`sidebar-link${isActive("/register") ? " active" : ""}`}

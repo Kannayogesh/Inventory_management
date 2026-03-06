@@ -10,7 +10,6 @@ const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
-  const [loginType, setLoginType] = useState("Employee");
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e) => {
@@ -21,16 +20,7 @@ const Login = () => {
     setLoading(false);
 
     if (res.success) {
-      if (loginType === "Management" && res.role === "Employee") {
-        setError("Please use the Employee tab for employee accounts.");
-        logout();
-        return;
-      }
-      if (loginType === "Employee" && (res.role === "Admin" || res.role === "Asset Manager")) {
-        setError("Please use the Management tab for admin accounts.");
-        logout();
-        return;
-      }
+      // Auto-redirect based on role
       if (res.role === "Admin" || res.role === "Asset Manager") {
         navigate("/dashboard");
       } else {
@@ -47,15 +37,25 @@ const Login = () => {
       <div className="login-left">
         <div className="login-left-content">
           <div className="login-logo">
-            <div className="login-logo-icon">📦</div>
-            <span className="login-logo-text">AssetFlow</span>
+            <div className="login-logo-icon">
+              <img src="/PAL logo.jpeg" alt="PAL logo" style={{ height: "40px", width: "auto", borderRadius: "4px" }} />
+            </div>
+            <span className="login-logo-text">PAL Inventory System</span>
           </div>
           <h1 className="login-tagline">
-            Smart asset<br />management for<br /><span>modern teams</span>
+            Welcome to
+            <br />PAL Inventory
+            <br /><span>IT Asset Management</span>
           </h1>
           <p className="login-desc">
-            Track, assign, and maintain your organisation's assets with clarity and confidence.
+            Efficiently manage, track, and maintain your organization's assets with our comprehensive inventory management system.
           </p>
+          <div style={{ marginTop: "32px", fontSize: "12px", color: "var(--text-muted)" }}>
+            <div style={{ marginBottom: "8px" }}>✓ Real-time asset tracking</div>
+            <div style={{ marginBottom: "8px" }}>✓ User assignment management</div>
+            <div style={{ marginBottom: "8px" }}>✓ Maintenance scheduling</div>
+            <div>✓ Comprehensive reporting</div>
+          </div>
         </div>
       </div>
 
@@ -71,24 +71,6 @@ const Login = () => {
 
           <h2 className="login-form-title">Welcome back</h2>
           <p className="login-form-sub">Sign in to your account to continue</p>
-
-          {/* Tab Switcher */}
-          <div className="tab-switcher">
-            <button
-              type="button"
-              className={`tab-btn${loginType === "Employee" ? " active" : ""}`}
-              onClick={() => { setLoginType("Employee"); setError(""); }}
-            >
-              Employee
-            </button>
-            <button
-              type="button"
-              className={`tab-btn${loginType === "Management" ? " active" : ""}`}
-              onClick={() => { setLoginType("Management"); setError(""); }}
-            >
-              Management
-            </button>
-          </div>
 
           {error && <div className="error-msg" style={{ marginBottom: "16px" }}>{error}</div>}
 
@@ -116,7 +98,7 @@ const Login = () => {
               />
             </div>
             <button type="submit" className="btn btn-primary" style={{ width: "100%", justifyContent: "center", marginTop: "4px", padding: "11px" }} disabled={loading}>
-              {loading ? <><span className="spinner" /> Signing in…</> : `Sign in as ${loginType}`}
+              {loading ? <><span className="spinner" /> Signing in…</> : "Sign in"}
             </button>
           </form>
         </div>

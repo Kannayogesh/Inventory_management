@@ -28,7 +28,10 @@ const ActionManagerModal = ({ asset, close, onRefresh }) => {
           remarks: "Logged by Admin",
         });
       }
-      onRefresh();
+      const successMsg = action === "assign"
+        ? `Asset assigned to ${employeeCode}. Email notification sent.`
+        : "Maintenance request logged successfully.";
+      onRefresh(successMsg);
       close();
     } catch (error) {
       alert(error.message);

@@ -2,524 +2,1099 @@
 <html lang="en">
 
 <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Inventory Dashboard</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>PAL Inventory — Analytics</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap"
+    rel="stylesheet">
+  <style>
+    :root {
+      --bg: #f0f4f8;
+      --card: #fff;
+      --text: #0f172a;
+      --muted: #64748b;
+      --border: rgba(15, 23, 42, .09);
+      --shadow: 0 1px 3px rgba(15, 23, 42, .06), 0 6px 20px rgba(15, 23, 42, .07);
+      --radius: 12px;
+      --primary: #1e40af;
+      --psoft: #eff6ff;
+      --good: #15803d;
+      --gsoft: #f0fdf4;
+      --warn: #b45309;
+      --wsoft: #fffbeb;
+      --danger: #b91c1c;
+      --dsoft: #fef2f2;
+      --info: #0369a1;
+      --isoft: #f0f9ff;
+      --rh: #f8fafc;
+    }
 
-    <!-- Bootstrap -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+    [data-theme=dark] {
+      --bg: #0d1117;
+      --card: #161b22;
+      --text: #e6edf3;
+      --muted: #8b949e;
+      --border: rgba(240, 246, 252, .1);
+      --shadow: 0 1px 3px rgba(0, 0, 0, .3), 0 6px 20px rgba(0, 0, 0, .25);
+      --primary: #58a6ff;
+      --psoft: rgba(88, 166, 255, .12);
+      --good: #3fb950;
+      --gsoft: rgba(63, 185, 80, .12);
+      --warn: #d29922;
+      --wsoft: rgba(210, 153, 34, .12);
+      --danger: #f85149;
+      --dsoft: rgba(248, 81, 73, .12);
+      --info: #58a6ff;
+      --isoft: rgba(88, 166, 255, .12);
+      --rh: rgba(240, 246, 252, .04);
+    }
 
-    <!-- Chart.js -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0
+    }
 
-    <!-- SheetJS (Excel export) -->
-    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    html,
+    body {
+      height: 100%;
+      font-family: 'Inter', system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      font-size: 13.5px
+    }
 
-    <!-- jsPDF + AutoTable (PDF export) -->
-    <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/jspdf-autotable@3.5.31/dist/jspdf.plugin.autotable.min.js"></script>
+    /* ─ HEADER ────────────────────────────── */
+    .hdr {
+      background: var(--card);
+      border-bottom: 1px solid var(--border);
+      box-shadow: var(--shadow);
+      padding: 12px 28px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      position: sticky;
+      top: 0;
+      z-index: 100
+    }
 
-    <style>
-        body {
-            background: #f6f7fb;
-        }
+    .hdr-brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-shrink: 0
+    }
 
-        .card-kpi {
-            border: 0;
-            box-shadow: 0 6px 18px rgba(0, 0, 0, .06);
-            border-radius: 14px;
-        }
+    .hdr-brand img {
+      height: 34px;
+      border-radius: 8px;
+      object-fit: contain
+    }
 
-        .table-wrap {
-            box-shadow: 0 6px 18px rgba(0, 0, 0, .06);
-            border-radius: 14px;
-            overflow: hidden;
-        }
+    .hdr-brand .bname {
+      font-size: 14px;
+      font-weight: 800;
+      letter-spacing: -.2px
+    }
 
-        .badge-soft {
-            font-weight: 600;
-        }
+    .hdr-brand .bsub {
+      font-size: 11px;
+      color: var(--muted)
+    }
 
-        .muted-hint {
-            font-size: 12px;
-            color: #6c757d;
-        }
-    </style>
+    .hdr-divider {
+      width: 1px;
+      height: 30px;
+      background: var(--border);
+      flex-shrink: 0
+    }
+
+    .hdr-title h1 {
+      font-size: 15px;
+      font-weight: 800;
+      margin: 0
+    }
+
+    .hdr-title p {
+      font-size: 11.5px;
+      color: var(--muted);
+      margin: 0
+    }
+
+    .srch {
+      position: relative;
+      flex: 1;
+      max-width: 380px;
+      margin-left: auto
+    }
+
+    .srch input {
+      width: 100%;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 8px 12px 8px 34px;
+      background: var(--bg);
+      color: var(--text);
+      font-size: 13px;
+      font-family: inherit;
+      outline: none
+    }
+
+    .srch input:focus {
+      border-color: var(--primary)
+    }
+
+    .srch .si {
+      position: absolute;
+      left: 10px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--muted);
+      font-size: 13px
+    }
+
+    .hdr-btns {
+      display: flex;
+      gap: 8px;
+      flex-shrink: 0
+    }
+
+    .hbtn {
+      padding: 7px 14px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: var(--card);
+      color: var(--text);
+      font-size: 12.5px;
+      font-weight: 600;
+      cursor: pointer;
+      font-family: inherit;
+      transition: .15s
+    }
+
+    .hbtn:hover {
+      background: var(--bg)
+    }
+
+    .hbtn.prim {
+      background: var(--primary);
+      color: #fff;
+      border-color: var(--primary)
+    }
+
+    .hbtn.prim:hover {
+      opacity: .85
+    }
+
+    .sdot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #94a3b8;
+      display: inline-block;
+      vertical-align: middle;
+      margin-right: 4px
+    }
+
+    @media(max-width:900px) {
+      .srch {
+        display: none
+      }
+
+      .hdr-title p {
+        display: none
+      }
+    }
+
+    /* ─ WRAP ──────────────────────────────── */
+    .wrap {
+      padding: 22px 28px;
+      display: flex;
+      flex-direction: column;
+      gap: 18px
+    }
+
+    @media(max-width:700px) {
+      .wrap {
+        padding: 14px
+      }
+    }
+
+    /* ─ KPI ───────────────────────────────── */
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 12px
+    }
+
+    @media(max-width:1100px) {
+      .kpi-grid {
+        grid-template-columns: repeat(3, 1fr)
+      }
+    }
+
+    @media(max-width:650px) {
+      .kpi-grid {
+        grid-template-columns: 1fr 1fr
+      }
+    }
+
+    .kc {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px 18px;
+      box-shadow: var(--shadow);
+      position: relative;
+      overflow: hidden
+    }
+
+    .kc::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: var(--primary);
+      border-radius: 0 0 var(--radius) var(--radius)
+    }
+
+    .kc.g::after {
+      background: var(--good)
+    }
+
+    .kc.w::after {
+      background: var(--warn)
+    }
+
+    .kc.d::after {
+      background: var(--danger)
+    }
+
+    .kc.i::after {
+      background: var(--info)
+    }
+
+    .kl {
+      font-size: 10.5px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .7px;
+      color: var(--muted)
+    }
+
+    .kv {
+      font-size: 28px;
+      font-weight: 900;
+      letter-spacing: -1px;
+      margin-top: 8px;
+      color: var(--text)
+    }
+
+    .kc.g .kv {
+      color: var(--good)
+    }
+
+    .kc.w .kv {
+      color: var(--warn)
+    }
+
+    .kc.d .kv {
+      color: var(--danger)
+    }
+
+    .kc.i .kv {
+      color: var(--info)
+    }
+
+    .ks {
+      font-size: 11px;
+      color: var(--muted);
+      margin-top: 3px
+    }
+
+    /* ─ CHARTS ────────────────────────────── */
+    .cg3 {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px
+    }
+
+    .cg2 {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px
+    }
+
+    @media(max-width:1050px) {
+
+      .cg3,
+      .cg2 {
+        grid-template-columns: 1fr
+      }
+    }
+
+    .cc {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px 18px;
+      box-shadow: var(--shadow)
+    }
+
+    .ch {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 12px
+    }
+
+    .ch .cht {
+      font-size: 13px;
+      font-weight: 800
+    }
+
+    .ch .chh {
+      font-size: 11px;
+      color: var(--muted);
+      margin-top: 2px
+    }
+
+    /* ─ TABLE ─────────────────────────────── */
+    .ts {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+      box-shadow: var(--shadow)
+    }
+
+    .th {
+      padding: 14px 20px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap
+    }
+
+    .th h2 {
+      margin: 0;
+      font-size: 15px;
+      font-weight: 800
+    }
+
+    .th p {
+      margin: 2px 0 0;
+      font-size: 11.5px;
+      color: var(--muted)
+    }
+
+    .thR {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      flex-wrap: wrap
+    }
+
+    .exbtn {
+      padding: 6px 12px;
+      border: 1px solid var(--border);
+      border-radius: 7px;
+      background: var(--bg);
+      color: var(--text);
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      font-family: inherit;
+      transition: .15s
+    }
+
+    .exbtn:hover {
+      border-color: var(--primary);
+      color: var(--primary);
+      background: var(--card)
+    }
+
+    .tscroll {
+      max-height: 360px;
+      overflow-y: auto
+    }
+
+    table.dt {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12.5px
+    }
+
+    table.dt thead th {
+      position: sticky;
+      top: 0;
+      z-index: 2;
+      background: var(--bg);
+      color: var(--muted);
+      font-size: 10.5px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .6px;
+      padding: 10px 14px;
+      border-bottom: 1px solid var(--border);
+      white-space: nowrap;
+      text-align: left
+    }
+
+    table.dt tbody td {
+      padding: 10px 14px;
+      border-bottom: 1px solid var(--border);
+      vertical-align: middle
+    }
+
+    table.dt tbody tr:last-child td {
+      border-bottom: 0
+    }
+
+    table.dt tbody tr:hover td {
+      background: var(--rh)
+    }
+
+    .tb {
+      font-weight: 700
+    }
+
+    .tm {
+      color: var(--muted);
+      font-size: 11.5px
+    }
+
+    .sub {
+      font-size: 11px;
+      color: var(--muted);
+      margin-top: 2px
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 700;
+      border: 1px solid transparent
+    }
+
+    .pl {
+      background: var(--psoft);
+      color: var(--primary)
+    }
+
+    .pg {
+      background: var(--gsoft);
+      color: var(--good)
+    }
+
+    .pw {
+      background: var(--wsoft);
+      color: var(--warn)
+    }
+
+    .pd {
+      background: var(--dsoft);
+      color: var(--danger)
+    }
+
+    .pm {
+      background: var(--bg);
+      color: var(--muted);
+      border-color: var(--border)
+    }
+
+    .emp-tag {
+      display: inline-flex;
+      flex-direction: column;
+      gap: 2px;
+      padding: 6px 10px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: var(--bg);
+      font-size: 12px;
+    }
+
+    .emp-tag .en {
+      font-weight: 700;
+      color: var(--text);
+      font-size: 12px;
+    }
+
+    .emp-tag .ei {
+      font-size: 10.5px;
+      color: var(--primary);
+      font-weight: 600;
+    }
+
+    .emp-tag .em {
+      font-size: 10.5px;
+      color: var(--muted);
+    }
+
+    .emp-badge {
+      background: var(--psoft);
+      color: var(--primary);
+      padding: 2px 7px;
+      border-radius: 999px;
+      font-size: 10px;
+      font-weight: 800
+    }
+
+    /* ─ MODAL ─────────────────────────────── */
+    .modal-content {
+      background: var(--card);
+      color: var(--text);
+      border: 1px solid var(--border);
+      border-radius: 14px
+    }
+
+    .modal-header,
+    .modal-footer {
+      border-color: var(--border)
+    }
+
+    .lr {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 9px 0;
+      border-bottom: 1px dashed var(--border);
+      font-size: 13px
+    }
+
+    .lr:last-child {
+      border-bottom: 0
+    }
+
+    .lr .lrr {
+      color: var(--muted);
+      font-size: 12px
+    }
+
+    .empty-c {
+      text-align: center;
+      padding: 28px;
+      color: var(--muted)
+    }
+  </style>
 </head>
 
-<body>
-    <div class="container py-4">
+<body data-theme="light">
 
-        <!-- Header -->
-        <div class="d-flex flex-wrap justify-content-between align-items-center mb-4">
-            <div>
-                <h2 class="fw-bold mb-1">Inventory Dashboard</h2>
-                <div class="text-muted">Welcome System Administrator (Admin)</div>
-            </div>
-            <div class="d-flex gap-2 mt-3 mt-md-0">
-                <button class="btn btn-primary" onclick="alert('Connect to Add Asset page')">Register New Asset</button>
-                <button class="btn btn-outline-primary" onclick="alert('Connect to Add User page')">Register New
-                    User</button>
-            </div>
-        </div>
+  <!-- HEADER -->
+  <header class="hdr">
+    <div class="hdr-brand">
+      <img src="/PAL logo.jpeg" alt="PAL" onerror="this.style.display='none'" />
+      <div>
+        <div class="bname">PAL Inventory</div>
+        <div class="bsub">Analytics</div>
+      </div>
+    </div>
+    <div class="hdr-divider"></div>
+    <div class="hdr-title">
+      <h1>Inventory Analytics Dashboard</h1>
+      <p>Assets · Assignments · Warranty · Overdue · Usage insights</p>
+    </div>
+    <div class="srch">
+      <span class="si">🔍</span>
+      <input id="globalSearch" placeholder="Search asset / brand / model / employee…" oninput="renderTable()" />
+    </div>
+    <div class="hdr-btns">
+      <span style="font-size:12px;color:var(--muted);display:flex;align-items:center;white-space:nowrap">
+        <span class="sdot" id="statusDot"></span><span id="statusTitle">Connecting…</span>
+      </span>
+      <button class="hbtn" onclick="toggleTheme()">🌙</button>
+      <button class="hbtn prim" onclick="loadAll()">↺ Refresh</button>
+      <button class="hbtn" onclick="clearToken()">Logout</button>
+    </div>
+  </header>
 
-        <!-- Token Box -->
-        <div class="card card-kpi mb-4">
-            <div class="card-body">
-                <div class="fw-semibold mb-2">Authentication (JWT Token)</div>
-                <div class="d-flex flex-wrap gap-2 align-items-center">
-                    <input id="tokenBox" class="form-control" style="max-width: 720px"
-                        placeholder="Paste JWT token here (you can paste only token OR 'Bearer token')" />
-                    <button class="btn btn-dark" onclick="saveToken()">Save Token</button>
-                    <button class="btn btn-outline-dark" onclick="clearToken()">Clear</button>
-                    <button class="btn btn-outline-primary ms-auto" onclick="loadAll()">Refresh</button>
-                </div>
-                <div class="muted-hint mt-2">
-                    Tip: Get token from <code>http://127.0.0.1:8000/docs</code> → POST <code>/api/login</code> → copy
-                    token.
-                </div>
-            </div>
-        </div>
-
-        <!-- KPI Cards -->
-        <div class="row g-3 mb-4">
-            <div class="col-6 col-md-4 col-lg">
-                <div class="card card-kpi">
-                    <div class="card-body">
-                        <div class="text-muted small">Total Assets</div>
-                        <div class="fs-2 fw-bold" id="kpiTotal">0</div>
-                    </div>
-                </div>
-            </div>
-            <div class="col-6 col-md-4 col-lg">
-                <div class="card card-kpi">
-                    <div class="card-body">
-                        <div class="text-muted small">Available</div>
-                        <div class="fs-2 fw-bold" id="kpiAvail">0</div>
-                    </div>
-                </div>
-            </div>
-            <div class="col-6 col-md-4 col-lg">
-                <div class="card card-kpi">
-                    <div class="card-body">
-                        <div class="text-muted small">Assigned</div>
-                        <div class="fs-2 fw-bold" id="kpiAssigned">0</div>
-                    </div>
-                </div>
-            </div>
-            <div class="col-6 col-md-4 col-lg">
-                <div class="card card-kpi">
-                    <div class="card-body">
-                        <div class="text-muted small">Maintenance</div>
-                        <div class="fs-2 fw-bold" id="kpiMaint">0</div>
-                    </div>
-                </div>
-            </div>
-            <div class="col-6 col-md-4 col-lg">
-                <div class="card card-kpi">
-                    <div class="card-body">
-                        <div class="text-muted small">Retired</div>
-                        <div class="fs-2 fw-bold" id="kpiRetired">0</div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Charts -->
-        <div class="row g-3 mb-4">
-            <div class="col-lg-4">
-                <div class="card card-kpi">
-                    <div class="card-body">
-                        <div class="fw-semibold mb-2">Status Distribution</div>
-                        <canvas id="chartStatus"></canvas>
-                    </div>
-                </div>
-            </div>
-            <div class="col-lg-4">
-                <div class="card card-kpi">
-                    <div class="card-body">
-                        <div class="fw-semibold mb-2">Department-wise Assigned</div>
-                        <canvas id="chartDept"></canvas>
-                        <div class="muted-hint mt-2">Note: requires assignments API to return department.</div>
-                    </div>
-                </div>
-            </div>
-            <div class="col-lg-4">
-                <div class="card card-kpi">
-                    <div class="card-body">
-                        <div class="fw-semibold mb-2">Purchase Cost Trend</div>
-                        <canvas id="chartCost"></canvas>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Export Buttons -->
-        <div class="d-flex flex-wrap gap-2 mb-3">
-            <button class="btn btn-outline-secondary" onclick="exportCSV()">Export CSV</button>
-            <button class="btn btn-outline-success" onclick="exportExcel()">Export Excel</button>
-            <button class="btn btn-outline-danger" onclick="exportPDF()">Export PDF</button>
-        </div>
-
-        <!-- Assets Table -->
-        <div class="table-wrap bg-white">
-            <div class="p-3 border-bottom d-flex flex-wrap gap-2 align-items-center">
-                <div class="fw-semibold">Assets Library</div>
-                <input class="form-control ms-auto" style="max-width: 320px" id="searchBox"
-                    placeholder="Search asset tag / brand / model..." oninput="renderTable()" />
-            </div>
-
-            <div class="table-responsive">
-                <table class="table table-hover align-middle mb-0" id="assetsTable">
-                    <thead class="table-light">
-                        <tr>
-                            <th>Asset Tag</th>
-                            <th>Brand / Model</th>
-                            <th>Serial No</th>
-                            <th>Status</th>
-                            <th>Assigned To (Employee ID)</th>
-                            <th>Condition</th>
-                            <th>Location</th>
-                            <th>Purchase Cost</th>
-                            <th>Warranty Expiry</th>
-                        </tr>
-                    </thead>
-                    <tbody id="assetsTbody">
-                        <tr>
-                            <td colspan="9" class="text-center text-muted py-4">Load data using token.</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-
-        <div class="muted-hint mt-3">
-            If you see “Not authenticated”, paste token and click <b>Save Token</b>.
-        </div>
+  <div class="wrap">
+    <!-- KPI -->
+    <div class="kpi-grid">
+      <div class="kc b">
+        <div class="kl">Total Users</div>
+        <div class="kv" id="kpiUsers">0</div>
+        <div class="ks">Active accounts</div>
+      </div>
+      <div class="kc">
+        <div class="kl">Total Assets</div>
+        <div class="kv" id="kpiTotal">0</div>
+        <div class="ks">Registered items</div>
+      </div>
+      <div class="kc g">
+        <div class="kl">Available</div>
+        <div class="kv" id="kpiAvail">0</div>
+        <div class="ks">Ready to assign</div>
+      </div>
+      <div class="kc i">
+        <div class="kl">Assigned</div>
+        <div class="kv" id="kpiAssigned">0</div>
+        <div class="ks">In employee usage</div>
+      </div>
+      <div class="kc w">
+        <div class="kl">Maintenance</div>
+        <div class="kv" id="kpiMaint">0</div>
+        <div class="ks">Service / Repair</div>
+      </div>
+      <div class="kc d">
+        <div class="kl">Overdue Returns</div>
+        <div class="kv" id="kpiOverdue">0</div>
+        <div class="ks">Return date crossed</div>
+      </div>
     </div>
 
-    <script>
-        const API_BASE = "http://127.0.0.1:8000/api";
+    <!-- CHARTS ROW 1 -->
+    <div class="cg3">
+      <div class="cc">
+        <div class="ch">
+          <div>
+            <div class="cht">Status Distribution</div>
+            <div class="chh">Click slice → assets</div>
+          </div>
+        </div><canvas id="chartStatus" style="max-height:230px"></canvas>
+      </div>
+      <div class="cc">
+        <div class="ch">
+          <div>
+            <div class="cht">Assigned by Employee</div>
+            <div class="chh">Top 10 · click bar</div>
+          </div>
+        </div><canvas id="chartEmployee" style="max-height:230px"></canvas>
+      </div>
+      <div class="cc">
+        <div class="ch">
+          <div>
+            <div class="cht">Condition Distribution</div>
+            <div class="chh">Click slice → assets</div>
+          </div>
+        </div><canvas id="chartCondition" style="max-height:230px"></canvas>
+      </div>
+    </div>
 
-        let assets = [];
-        let assignments = [];
+    <!-- CHARTS ROW 2 -->
+    <div class="cg2">
+      <div class="cc">
+        <div class="ch">
+          <div>
+            <div class="cht">Warranty Buckets</div>
+            <div class="chh">Expired / 0–30 / 31–90 / 90+ days</div>
+          </div>
+        </div><canvas id="chartWarranty" style="max-height:240px"></canvas>
+      </div>
+      <div class="cc">
+        <div class="ch">
+          <div>
+            <div class="cht">Overdue Returns by Employee</div>
+            <div class="chh">Click bar → details</div>
+          </div>
+        </div><canvas id="chartOverdue" style="max-height:240px"></canvas>
+      </div>
+    </div>
 
-        // Map asset_id / asset_tag -> user_id (employee id)
-        let assignedUserIdByAssetId = new Map();
-        let assignedUserIdByAssetTag = new Map();
+    <!-- CHARTS ROW 3 -->
+    <div class="cg3">
+      <div class="cc">
+        <div class="ch">
+          <div>
+            <div class="cht">Assigned by Asset Type</div>
+            <div class="chh">Click bar → assets</div>
+          </div>
+        </div><canvas id="chartTypeAssigned" style="max-height:220px"></canvas>
+      </div>
+      <div class="cc">
+        <div class="ch">
+          <div>
+            <div class="cht">Available by Asset Type</div>
+            <div class="chh">Click bar → assets</div>
+          </div>
+        </div><canvas id="chartTypeAvailable" style="max-height:220px"></canvas>
+      </div>
+      <div class="cc">
+        <div class="ch">
+          <div>
+            <div class="cht">Top Locations</div>
+            <div class="chh">Click bar → assets</div>
+          </div>
+        </div><canvas id="chartLocation" style="max-height:220px"></canvas>
+      </div>
+    </div>
 
-        let statusChart, deptChart, costChart;
+    <!-- TABLE -->
+    <div class="ts">
+      <div class="th">
+        <div>
+          <h2>Asset Library</h2>
+          <p>Assigned To shows employee name · <code style="font-size:10.5px">localStorage.setItem("token","…")</code>
+          </p>
+        </div>
+        <div class="thR">
+          <span id="tblCount" style="font-size:12px;color:var(--muted)"></span>
+          <button class="exbtn" onclick="doCSV()">📄 CSV</button>
+          <button class="exbtn" onclick="doExcel()">📊 Excel</button>
+          <button class="exbtn" onclick="window.print()">📋 PDF</button>
+        </div>
+      </div>
+      <div class="tscroll">
+        <table class="dt">
+          <thead>
+            <tr>
+              <th>Asset</th>
+              <th>Serial</th>
+              <th>Status</th>
+              <th>Assigned To</th>
+              <th>Exp. Return</th>
+              <th>Condition</th>
+              <th>Location</th>
+              <th>Cost</th>
+              <th>Warranty</th>
+            </tr>
+          </thead>
+          <tbody id="tBody">
+            <tr>
+              <td colspan="9" class="empty-c">Loading…</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
 
-        function saveToken() {
-            const t = (document.getElementById("tokenBox").value || "").trim();
-            if (!t) { alert("Please paste token"); return; }
-            localStorage.setItem("token", t);
-            alert("Token saved ✅");
-            loadAll();
+  <!-- MODAL -->
+  <div class="modal fade" id="detailsModal" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="detailsTitle">Details</h5><button type="button" class="btn-close"
+            data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body" id="detailsBody" style="font-size:13px"></div>
+        <div class="modal-footer"><button class="btn btn-sm btn-outline-secondary"
+            data-bs-dismiss="modal">Close</button></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    /* ── THEME ──────────────────────────────────────────── */
+    function applyTheme(t) { document.body.setAttribute("data-theme", t); localStorage.setItem("pal_th", t); }
+    function toggleTheme() { applyTheme(document.body.getAttribute("data-theme") === "dark" ? "light" : "dark"); renderCharts(); }
+    applyTheme(localStorage.getItem("pal_th") || "light");
+
+    /* ── AUTH ───────────────────────────────────────────── */
+    function getToken() { return (localStorage.getItem("token") || "").trim() || null; }
+    function authH() { const t = getToken(); if (!t) return {}; return { Authorization: t.startsWith("Bearer ") ? t : "Bearer " + t }; }
+    function clearToken() { localStorage.removeItem("token"); setStatus("warn", "Logged out"); renderEmpty("Token cleared. Set localStorage.setItem(\"token\",\"...\") and refresh."); }
+
+    /* ── STATUS ─────────────────────────────────────────── */
+    function setStatus(kind, label) {
+      const d = document.getElementById("statusDot");
+      document.getElementById("statusTitle").textContent = label;
+      d.style.background = kind === "ok" ? "#22c55e" : kind === "warn" ? "#f59e0b" : "#ef4444";
+    }
+
+    /* ── API AUTO-DETECT ────────────────────────────────── */
+    const HOST = "http://127.0.0.1:8000";
+    const BASES = [{ n: "With /api", b: HOST + "/api" }, { n: "No /api", b: HOST }];
+    const EPC = {
+      assets: ["/assets/", "/assets"],
+      assignments: ["/assignments/", "/assignments"],
+      users: ["/auth/users", "/users/", "/users", "/user/", "/user", "/employees/", "/employees"]
+    };
+    let EP = null;
+    async function fj(url, h) { const r = await fetch(url, { headers: h }); if (!r.ok) throw new Error(r.status); return r.json(); }
+    function norm(j) { if (Array.isArray(j)) return j; if (j?.items && Array.isArray(j.items)) return j.items; if (j?.data && Array.isArray(j.data)) return j.data; return []; }
+    async function probe(base, paths, h) { for (const p of paths) { try { return { url: base + p, d: norm(await fj(base + p, h)) }; } catch { } } return null; }
+    async function detectApi(h) {
+      for (const b of BASES) {
+        const a = await probe(b.b, EPC.assets, h); if (!a) continue;
+        const [as, us] = [await probe(b.b, EPC.assignments, h), await probe(b.b, EPC.users, h)];
+        EP = { aUrl: a.url, asUrl: as?.url, uUrl: us?.url }; return true;
+      } return false;
+    }
+
+    /* ── DATA ───────────────────────────────────────────── */
+    let assets = [], assignments = [], users = [];
+    const uI = new Map(), uE = new Map(), aI = new Map(), aT = new Map();
+
+    function buildUMaps() {
+      uI.clear(); uE.clear();
+      for (const u of users) {
+        const id = String(u.user_id ?? u.id ?? "");
+        const em = String(u.employee_code ?? u.emp_code ?? "").trim();
+        if (id) uI.set(id, u); if (em) uE.set(em, u);
+      }
+    }
+    function uName(u) { return u?.full_name || u?.name || null; }
+    function isActive(x) {
+      if (x.returned_date || x.returnedDate || x.returned_at) return false;
+      const s = (x.status ?? x.assignment_status ?? "").toLowerCase();
+      return s !== "completed" && s !== "returned";
+    }
+    function buildAMaps() {
+      aI.clear(); aT.clear();
+      for (const x of assignments) {
+        if (!isActive(x)) continue;
+        const ai = String(x.asset_id ?? x.assetId ?? ""), at = String(x.asset_tag ?? x.assetTag ?? "");
+        const ui = String(x.user_id ?? x.userId ?? ""), em = String(x.employee_code ?? x.emp_code ?? "").trim();
+        // Resolve user object for extra fields
+        const userObj = ui ? uI.get(ui) : (em ? uE.get(em) : null);
+        let n = x.full_name || x.employee_name || x.user_full_name || (x.user?.full_name) || null;
+        if (!n && userObj) n = uName(userObj);
+        if (!n && ui) n = uName(uI.get(ui)); if (!n && em) n = uName(uE.get(em));
+        // Employee ID (prefer employee_code, fallback to user_id)
+        const empId = em || (ui ? ui : "—");
+        // Employee email
+        const email = x.email || x.employee_email || userObj?.email || userObj?.email_address || "—";
+        // Chart label = full name only (no code appended)
+        const chartName = n || (em ? `Emp: ${em}` : (ui ? `User #${ui}` : "—"));
+        // Display name for backwards compat
+        const display = chartName;
+        const exp = x.expected_return_date || x.expectedReturnDate || null;
+        const p = { name: display, chartName, empId, email, exp, raw: x };
+        if (ai) aI.set(ai, p); if (at) aT.set(at, p);
+      }
+    }
+    function getP(a) { const ai = String(a.asset_id ?? a.assetId ?? ""), at = String(a.asset_tag ?? a.assetTag ?? ""); return aI.get(ai) || aT.get(at) || null; }
+    function assignedTo(a) { return getP(a)?.name || "—"; }
+    function expRet(a) { return getP(a)?.exp || null; }
+
+    /* ── KPI ────────────────────────────────────────────── */
+    function isOverdue(a) { const p = getP(a); if (!p?.exp) return false; return new Date(p.exp) < new Date(); }
+    function getOverdue() { return assets.filter(a => a.status?.toLowerCase() === "assigned" && isOverdue(a)); }
+    function setKPIs() {
+      const t = assets.length, av = assets.filter(a => a.status?.toLowerCase() === "available").length;
+      const as = assets.filter(a => a.status?.toLowerCase() === "assigned").length, mt = assets.filter(a => a.status?.toLowerCase() === "maintenance").length;
+      const ov = getOverdue().length;
+      const us = users.length;
+      [["kpiUsers", us], ["kpiTotal", t], ["kpiAvail", av], ["kpiAssigned", as], ["kpiMaint", mt], ["kpiOverdue", ov]].forEach(([id, v]) => {
+        const el = document.getElementById(id);
+        if (el) el.textContent = v;
+      });
+    }
+
+    /* ── UTILS ──────────────────────────────────────────── */
+    function es(v) { return String(v ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"); }
+    function fd(d) { if (!d) return "—"; try { return new Date(d).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" }); } catch { return d; } }
+    function fc(v) { if (!v && v !== 0) return "—"; return "₹" + Number(v).toLocaleString("en-IN"); }
+
+    function spill(s) {
+      const l = (s || "").toLowerCase();
+      if (l === "assigned") return `<span class="pill pl">● Assigned</span>`;
+      if (l === "available") return `<span class="pill pg">● Available</span>`;
+      if (l === "maintenance") return `<span class="pill pw">● Maintenance</span>`;
+      if (l === "retired") return `<span class="pill pm">Retired</span>`;
+      return `<span class="pill pm">${es(s || "—")}</span>`;
+    }
+    function cpill(c) {
+      const l = (c || "").toLowerCase();
+      if (l === "new" || l === "good") return `<span class="pill pg">${es(c)}</span>`;
+      if (l === "fair") return `<span class="pill pw">${es(c)}</span>`;
+      if (l === "damaged" || l === "poor") return `<span class="pill pd">${es(c)}</span>`;
+      return `<span class="pill pm">${es(c || "—")}</span>`;
+    }
+    function wpill(wd) {
+      if (!wd) return `<span class="pill pm">—</span>`;
+      const diff = Math.ceil((new Date(wd) - new Date()) / 864e5);
+      if (diff < 0) return `<span class="pill pd">Expired</span> <span class="tm">${es(fd(wd))}</span>`;
+      if (diff <= 30) return `<span class="pill pw">≤30d</span> <span class="tm">${es(fd(wd))}</span>`;
+      if (diff <= 90) return `<span class="pill pl">≤90d</span> <span class="tm">${es(fd(wd))}</span>`;
+      return `<span class="tm">${es(fd(wd))}</span>`;
+    }
+    function showDet(title, rows) {
+      document.getElementById("detailsTitle").textContent = title;
+      document.getElementById("detailsBody").innerHTML = rows.length
+        ? rows.map(r => `<div class="lr"><div>${r.l}</div><div class="lrr">${r.r || ""}</div></div>`).join("")
+        : `<div class="empty-c">No items.</div>`;
+      new bootstrap.Modal(document.getElementById("detailsModal")).show();
+    }
+
+    /* ── TABLE ──────────────────────────────────────────── */
+    function renderTable() {
+      const q = (document.getElementById("globalSearch").value || "").toLowerCase();
+      const fil = assets.filter(a => {
+        const p = getP(a);
+        const h = `${a.asset_tag || ""} ${a.brand || ""} ${a.model || ""} ${a.serial_number || ""} ${a.location || ""} ${p?.name || ""}`.toLowerCase();
+        return !q || h.includes(q);
+      });
+      document.getElementById("tblCount").textContent = `${fil.length} asset${fil.length !== 1 ? "s" : ""}`;
+      if (!fil.length) { document.getElementById("tBody").innerHTML = `<tr><td colspan="9" class="empty-c">No assets match search.</td></tr>`; return; }
+      document.getElementById("tBody").innerHTML = fil.map(a => {
+        const p = getP(a), od = isOverdue(a);
+        const tag = a.asset_tag || "—", bm = ((a.brand || "") + (a.model ? " " + a.model : "")).trim() || "—";
+        const serial = a.serial_number || "—", st = a.status || "Unknown";
+        const er = p?.exp ? fd(p.exp) : "—";
+        const assignedCell = st.toLowerCase() === "assigned" && p
+          ? `<span class="emp-tag">
+              <span class="en">${es(p.name || "—")}</span>
+              <span class="ei">ID: ${es(p.empId || "—")}</span>
+              <span class="em">${es(p.email || "—")}</span>
+            </span>`
+          : `<span class="tm">—</span>`;
+        return `<tr${od ? ' style="background:var(--dsoft)"' : ""}>
+      <td><div class="tb">${es(tag)}</div><div class="sub">${es(bm)}</div></td>
+      <td class="tm">${es(serial)}</td>
+      <td>${spill(st)}</td>
+      <td>${assignedCell}</td>
+      <td>${p ? `<span${od ? ' style="color:var(--danger);font-weight:700"' : ""} class="tm">${es(er)}</span>` : `<span class="tm">—</span>`}</td>
+      <td>${cpill(a.condition_status)}</td>
+      <td class="tm">${es(a.location || "—")}</td>
+      <td class="tm">${es(fc(a.purchase_cost))}</td>
+      <td>${wpill(a.warranty_expiry)}</td>
+    </tr>`;
+      }).join("");
+    }
+
+    /* ── EXPORT ─────────────────────────────────────────── */
+    function edata() { return assets.map(a => { const p = getP(a); return { "Asset Tag": a.asset_tag, "Brand": a.brand, "Model": a.model, "Serial": a.serial_number, "Status": a.status, "Assigned To": p?.name || "Unassigned", "Exp Return": fd(p?.exp), "Condition": a.condition_status, "Location": a.location, "Cost": a.purchase_cost || "", "Warranty": fd(a.warranty_expiry) }; }); }
+    function doCSV() { const d = edata(); if (!d.length) return; const h = Object.keys(d[0]); const r = [h.join(","), ...d.map(x => h.map(k => `"${String(x[k] ?? "").replace(/"/g, '""')}"`).join(","))].join("\n"); const a = document.createElement("a"); a.href = "data:text/csv;charset=utf-8," + encodeURIComponent(r); a.download = "assets.csv"; a.click(); }
+    function doExcel() { const d = edata(); if (!d.length) return; const h = Object.keys(d[0]); const s = `<table><tr>${h.map(k => `<th>${k}</th>`).join("")}</tr>${d.map(x => `<tr>${h.map(k => `<td>${x[k] ?? ""}</td>`).join("")}</tr>`).join("")}</table>`; const b = new Blob([s], { type: "application/vnd.ms-excel" }); const a = document.createElement("a"); a.href = URL.createObjectURL(b); a.download = "assets.xls"; a.click(); }
+
+    /* ── CHARTS ─────────────────────────────────────────── */
+    const ch = {};
+    function dc() { Object.values(ch).forEach(c => c?.destroy()); Object.keys(ch).forEach(k => delete ch[k]); }
+    function dark() { return document.body.getAttribute("data-theme") === "dark"; }
+    const PAL = ["#2563eb", "#16a34a", "#d97706", "#dc2626", "#7c3aed", "#0891b2", "#be185d", "#059669", "#0f766e", "#b45309"];
+
+    function renderCharts() {
+      dc();
+      const tc = dark() ? "#8b949e" : "#475569", gc = dark() ? "rgba(240,246,252,.08)" : "rgba(15,23,42,.07)";
+      const sc = { x: { ticks: { color: tc }, grid: { color: gc } }, y: { ticks: { color: tc }, grid: { color: gc }, beginAtZero: true } };
+      function mc(id, cfg) { ch[id] = new Chart(document.getElementById(id), cfg); }
+
+      // Status
+      const sC = {}; assets.forEach(a => { const s = a.status || "Unknown"; sC[s] = (sC[s] || 0) + 1; });
+      const sL = Object.keys(sC), sV = Object.values(sC);
+      mc("chartStatus", {
+        type: "doughnut", data: { labels: sL, datasets: [{ data: sV, backgroundColor: PAL, borderWidth: 2, borderColor: dark() ? "#161b22" : "#fff" }] },
+        options: {
+          plugins: { legend: { position: "bottom", labels: { color: tc, font: { size: 11 } } }, tooltip: { callbacks: { label: c => `${c.label}: ${c.raw}` } } },
+          onClick: (_, el) => { if (!el.length) return; const l = sL[el[0].index]; showDet(`Status: ${l} (${sC[l]})`, assets.filter(a => (a.status || "Unknown") === l).map(a => ({ l: `${a.asset_tag || ""} — ${a.brand || ""} ${a.model || ""}`.trim(), r: a.location || "—" }))); }
         }
+      });
 
-        function clearToken() {
-            localStorage.removeItem("token");
-            document.getElementById("tokenBox").value = "";
-            alert("Token cleared");
+      // Employee — group by full name only (chartName)
+      const eC = {};
+      assets.filter(a => a.status?.toLowerCase() === "assigned").forEach(a => {
+        const p = getP(a);
+        const w = p?.chartName || p?.name || "—";
+        eC[w] = (eC[w] || 0) + 1;
+      });
+      const eS = Object.entries(eC).sort((a, b) => b[1] - a[1]).slice(0, 10);
+      mc("chartEmployee", {
+        type: "bar",
+        data: { labels: eS.map(x => x[0]), datasets: [{ data: eS.map(x => x[1]), backgroundColor: "#2563eb", borderRadius: 4 }] },
+        options: {
+          plugins: { legend: { display: false }, tooltip: { callbacks: { label: c => `Assets: ${c.raw}` } } },
+          scales: { ...sc, x: { ...sc.x, ticks: { ...sc.x.ticks, maxRotation: 30, minRotation: 0 } } },
+          onClick: (_, el) => {
+            if (!el.length) return;
+            const w = eS[el[0].index][0];
+            showDet(`Assigned to: ${w}`, assets.filter(a => a.status?.toLowerCase() === "assigned" && (getP(a)?.chartName || getP(a)?.name) === w).map(a => ({ l: `${a.asset_tag || ""} — ${a.brand || ""} ${a.model || ""}`.trim(), r: fd(expRet(a)) })));
+          }
         }
+      });
 
-        function getAuthHeaders() {
-            const token = (localStorage.getItem("token") || "").trim();
-            if (!token) return {};
-            const value = token.startsWith("Bearer ") ? token : `Bearer ${token}`;
-            return { "Authorization": value };
+      // Condition
+      const cC = {}; assets.forEach(a => { const c = a.condition_status || "Unknown"; cC[c] = (cC[c] || 0) + 1; });
+      const cL = Object.keys(cC), cV = Object.values(cC);
+      mc("chartCondition", {
+        type: "pie", data: { labels: cL, datasets: [{ data: cV, backgroundColor: PAL, borderWidth: 2, borderColor: dark() ? "#161b22" : "#fff" }] },
+        options: {
+          plugins: { legend: { position: "bottom", labels: { color: tc, font: { size: 11 } } } },
+          onClick: (_, el) => { if (!el.length) return; const c = cL[el[0].index]; showDet(`Condition: ${c}`, assets.filter(a => (a.condition_status || "Unknown") === c).map(a => ({ l: `${a.asset_tag || ""} — ${a.brand || ""} ${a.model || ""}`.trim(), r: a.status || "—" }))); }
         }
+      });
 
-        (function initTokenBox() {
-            const saved = localStorage.getItem("token");
-            if (saved) document.getElementById("tokenBox").value = saved;
-        })();
-
-        // Build map from assignments -> which user_id currently has an asset
-        function buildAssignmentMaps() {
-            assignedUserIdByAssetId.clear();
-            assignedUserIdByAssetTag.clear();
-
-            for (const x of assignments) {
-                const assetId = x.asset_id ?? x.assetId ?? null;
-                const assetTag = x.asset_tag ?? x.assetTag ?? null;
-
-                const userId = x.user_id ?? x.userId ?? x.employee_id ?? x.employeeId ?? null;
-
-                const st = (x.status ?? x.assignment_status ?? "").toString().toLowerCase();
-                const isActive =
-                    st === "active" ||
-                    st === "assigned" ||
-                    st === "pending" ||
-                    (!x.returned_date && !x.returnedDate && !x.returned_at);
-
-                if (!isActive) continue;
-                if (userId === null || userId === undefined) continue;
-
-                if (assetId !== null && assetId !== undefined) assignedUserIdByAssetId.set(String(assetId), String(userId));
-                if (assetTag) assignedUserIdByAssetTag.set(String(assetTag), String(userId));
-            }
+      // Warranty
+      const now = new Date(), wb = { "Expired": 0, "0–30 days": 0, "31–90 days": 0, "90+ days": 0, "No data": 0 };
+      const wbC = { "Expired": "#dc2626", "0–30 days": "#d97706", "31–90 days": "#2563eb", "90+ days": "#16a34a", "No data": "#94a3b8" };
+      assets.forEach(a => { const d = a.warranty_expiry ? new Date(a.warranty_expiry) : null; if (!d) { wb["No data"]++; return; } const df = Math.ceil((d - now) / 864e5); if (df < 0) wb["Expired"]++; else if (df <= 30) wb["0–30 days"]++; else if (df <= 90) wb["31–90 days"]++; else wb["90+ days"]++; });
+      const wL = Object.keys(wb);
+      mc("chartWarranty", {
+        type: "bar", data: { labels: wL, datasets: [{ data: Object.values(wb), backgroundColor: wL.map(k => wbC[k]), borderRadius: 4 }] },
+        options: {
+          plugins: { legend: { display: false } }, scales: sc,
+          onClick: (_, el) => { if (!el.length) return; const bk = wL[el[0].index]; const it = assets.filter(a => { const d = a.warranty_expiry ? new Date(a.warranty_expiry) : null; if (bk === "No data") return !d; if (!d) return false; const df = Math.ceil((d - now) / 864e5); if (bk === "Expired") return df < 0; if (bk === "0–30 days") return df >= 0 && df <= 30; if (bk === "31–90 days") return df >= 31 && df <= 90; return df > 90; }).map(a => ({ l: `${a.asset_tag || ""} — ${a.brand || ""} ${a.model || ""}`.trim(), r: fd(a.warranty_expiry) })); showDet(`Warranty: ${bk} (${it.length})`, it); }
         }
+      });
 
-        async function loadAll() {
-            try {
-                const headers = getAuthHeaders();
-                if (!headers.Authorization) {
-                    document.getElementById("assetsTbody").innerHTML =
-                        `<tr><td colspan="9" class="text-center text-muted py-4">
-            Please paste JWT token and click <b>Save Token</b>.
-          </td></tr>`;
-                    return;
-                }
-
-                const [assetsRes, assignRes] = await Promise.all([
-                    fetch(`${API_BASE}/assets/`, { headers }),
-                    fetch(`${API_BASE}/assignments/`, { headers })
-                ]);
-
-                if (!assetsRes.ok) {
-                    const t = await safeText(assetsRes);
-                    throw new Error(`Assets API failed: ${assetsRes.status} ${t}`);
-                }
-
-                assets = await assetsRes.json();
-                assignments = assignRes.ok ? await assignRes.json() : [];
-
-                buildAssignmentMaps();
-
-                computeKPIs();
-                renderCharts();
-                renderTable();
-
-            } catch (err) {
-                console.error(err);
-                document.getElementById("assetsTbody").innerHTML =
-                    `<tr><td colspan="9" class="text-center text-danger py-4">
-          Failed to load data. ${escapeHtml(err.message)}
-        </td></tr>`;
-                setKPIs(0, 0, 0, 0, 0);
-                destroyCharts();
-            }
+      // Overdue
+      const od = getOverdue(), oc = {}; od.forEach(a => { const w = assignedTo(a); oc[w] = (oc[w] || 0) + 1; });
+      const oS = Object.entries(oc).sort((a, b) => b[1] - a[1]).slice(0, 8);
+      mc("chartOverdue", {
+        type: "bar", data: { labels: oS.map(x => x[0]), datasets: [{ data: oS.map(x => x[1]), backgroundColor: "#dc2626", borderRadius: 4 }] },
+        options: {
+          plugins: { legend: { display: false }, tooltip: { callbacks: { label: c => `Overdue: ${c.raw}` } } }, scales: sc,
+          onClick: (_, el) => { if (!el.length) return; const w = oS[el[0].index][0]; showDet(`Overdue: ${w}`, od.filter(a => assignedTo(a) === w).map(a => ({ l: `${a.asset_tag || ""} — ${a.brand || ""} ${a.model || ""}`.trim(), r: `Expected: ${fd(expRet(a))}` }))); }
         }
+      });
 
-        async function safeText(res) {
-            try { return await res.text(); } catch { return ""; }
+      // Type Assigned
+      function atype(a) { const t = (a.asset_tag || "").toUpperCase(), bm = ((a.brand || "") + " " + (a.model || "")).toUpperCase(); if (t.startsWith("LPT") || bm.includes("LAPTOP")) return "Laptop"; if (t.startsWith("DSK") || bm.includes("DESKTOP")) return "Desktop"; if (bm.includes("MONITOR")) return "Monitor"; if (bm.includes("MOUSE") || bm.includes("KEYBOARD")) return "Peripheral"; return "Other"; }
+      const taC = {}; assets.filter(a => a.status?.toLowerCase() === "assigned").forEach(a => { const t = atype(a); taC[t] = (taC[t] || 0) + 1; });
+      const taL = Object.keys(taC);
+      mc("chartTypeAssigned", {
+        type: "bar", data: { labels: taL, datasets: [{ data: Object.values(taC), backgroundColor: "#7c3aed", borderRadius: 4 }] },
+        options: {
+          plugins: { legend: { display: false } }, scales: sc,
+          onClick: (_, el) => { if (!el.length) return; const t = taL[el[0].index]; showDet(`Assigned Type: ${t}`, assets.filter(a => a.status?.toLowerCase() === "assigned" && atype(a) === t).map(a => ({ l: `${a.asset_tag || ""} — ${a.brand || ""} ${a.model || ""}`.trim(), r: assignedTo(a) }))); }
         }
+      });
 
-        function setKPIs(total, available, assigned, maintenance, retired) {
-            document.getElementById("kpiTotal").textContent = total;
-            document.getElementById("kpiAvail").textContent = available;
-            document.getElementById("kpiAssigned").textContent = assigned;
-            document.getElementById("kpiMaint").textContent = maintenance;
-            document.getElementById("kpiRetired").textContent = retired;
+      // Type Available
+      const tvC = {}; assets.filter(a => a.status?.toLowerCase() === "available").forEach(a => { const t = atype(a); tvC[t] = (tvC[t] || 0) + 1; });
+      const tvL = Object.keys(tvC);
+      mc("chartTypeAvailable", {
+        type: "bar", data: { labels: tvL, datasets: [{ data: Object.values(tvC), backgroundColor: "#16a34a", borderRadius: 4 }] },
+        options: {
+          plugins: { legend: { display: false } }, scales: sc,
+          onClick: (_, el) => { if (!el.length) return; const t = tvL[el[0].index]; showDet(`Available Type: ${t}`, assets.filter(a => a.status?.toLowerCase() === "available" && atype(a) === t).map(a => ({ l: `${a.asset_tag || ""} — ${a.brand || ""} ${a.model || ""}`.trim(), r: "Available" }))); }
         }
+      });
 
-        function computeKPIs() {
-            const total = assets.length;
-            const available = assets.filter(a => (a.status || "").toLowerCase() === "available").length;
-            const assigned = assets.filter(a => (a.status || "").toLowerCase() === "assigned").length;
-            const maintenance = assets.filter(a => (a.status || "").toLowerCase() === "maintenance").length;
-            const retired = assets.filter(a => (a.status || "").toLowerCase() === "retired").length;
-            setKPIs(total, available, assigned, maintenance, retired);
+      // Locations
+      const lC = {}; assets.forEach(a => { const l = a.location || "Unknown"; lC[l] = (lC[l] || 0) + 1; });
+      const lS = Object.entries(lC).sort((a, b) => b[1] - a[1]).slice(0, 8);
+      mc("chartLocation", {
+        type: "bar", data: { labels: lS.map(x => x[0]), datasets: [{ data: lS.map(x => x[1]), backgroundColor: "#0891b2", borderRadius: 4 }] },
+        options: {
+          plugins: { legend: { display: false } }, scales: sc,
+          onClick: (_, el) => { if (!el.length) return; const l = lS[el[0].index][0]; showDet(`Location: ${l}`, assets.filter(a => (a.location || "Unknown") === l).map(a => ({ l: `${a.asset_tag || ""} — ${a.brand || ""} ${a.model || ""}`.trim(), r: a.status || "—" }))); }
         }
+      });
+    }
 
-        function destroyCharts() {
-            if (statusChart) statusChart.destroy();
-            if (deptChart) deptChart.destroy();
-            if (costChart) costChart.destroy();
-            statusChart = deptChart = costChart = null;
-        }
-
-        function renderCharts() {
-            destroyCharts();
-
-            const statusCounts = {};
-            for (const a of assets) {
-                const s = a.status || "Unknown";
-                statusCounts[s] = (statusCounts[s] || 0) + 1;
-            }
-            statusChart = new Chart(document.getElementById("chartStatus"), {
-                type: "pie",
-                data: { labels: Object.keys(statusCounts), datasets: [{ data: Object.values(statusCounts) }] },
-                options: { responsive: true }
-            });
-
-            const deptCounts = {};
-            for (const x of assignments) {
-                const dept = x.department || x.user_department || x.dept || "Unknown";
-                deptCounts[dept] = (deptCounts[dept] || 0) + 1;
-            }
-            deptChart = new Chart(document.getElementById("chartDept"), {
-                type: "bar",
-                data: { labels: Object.keys(deptCounts), datasets: [{ data: Object.values(deptCounts) }] },
-                options: { responsive: true, plugins: { legend: { display: false } } }
-            });
-
-            const byDate = {};
-            for (const a of assets) {
-                const d = a.purchase_date || "Unknown";
-                const cost = Number(a.purchase_cost || 0);
-                byDate[d] = (byDate[d] || 0) + cost;
-            }
-            const dates = Object.keys(byDate).sort();
-            const costs = dates.map(d => byDate[d]);
-
-            costChart = new Chart(document.getElementById("chartCost"), {
-                type: "line",
-                data: { labels: dates, datasets: [{ data: costs }] },
-                options: { responsive: true }
-            });
-        }
-
-        function renderTable() {
-            const q = (document.getElementById("searchBox").value || "").toLowerCase().trim();
-
-            const filtered = assets.filter(a => {
-                const hay = `${a.asset_tag || ""} ${a.brand || ""} ${a.model || ""} ${a.serial_number || ""} ${a.location || ""}`.toLowerCase();
-                return !q || hay.includes(q);
-            });
-
-            const rows = filtered.map(a => {
-                const assetId = a.asset_id ?? a.assetId ?? "";
-                const assetTag = a.asset_tag ?? a.assetTag ?? "";
-
-                const assignedToId =
-                    assignedUserIdByAssetId.get(String(assetId)) ||
-                    assignedUserIdByAssetTag.get(String(assetTag)) ||
-                    "—";
-
-                return `
-        <tr>
-          <td class="fw-semibold">${escapeHtml(assetTag)}</td>
-          <td>${escapeHtml(((a.brand || "") + " " + (a.model || "")).trim())}</td>
-          <td>${escapeHtml(a.serial_number || "")}</td>
-          <td>${badgeHtml(a.status)}</td>
-          <td>${escapeHtml(assignedToId)}</td>
-          <td>${escapeHtml(a.condition_status || "")}</td>
-          <td>${escapeHtml(a.location || "")}</td>
-          <td>${escapeHtml(a.purchase_cost ?? "")}</td>
-          <td>${escapeHtml(a.warranty_expiry || "")}</td>
-        </tr>
-      `;
-            }).join("");
-
-            document.getElementById("assetsTbody").innerHTML =
-                rows || `<tr><td colspan="9" class="text-center text-muted py-4">No data</td></tr>`;
-        }
-
-        function badgeHtml(status) {
-            const s = (status || "Unknown");
-            const l = s.toLowerCase();
-            let cls = "bg-secondary";
-            if (l.includes("available")) cls = "bg-success";
-            else if (l.includes("assigned")) cls = "bg-primary";
-            else if (l.includes("maintenance")) cls = "bg-warning text-dark";
-            else if (l.includes("retired")) cls = "bg-dark";
-            return `<span class="badge ${cls} badge-soft">${escapeHtml(s)}</span>`;
-        }
-
-        function exportCSV() {
-            if (!assets.length) { alert("No data to export"); return; }
-
-            const headers = ["asset_tag", "brand", "model", "serial_number", "status", "assigned_to_employee_id", "condition_status", "location", "purchase_cost", "purchase_date", "warranty_expiry"];
-            const lines = [headers.join(",")];
-
-            for (const a of assets) {
-                const assetId = a.asset_id ?? a.assetId ?? "";
-                const assetTag = a.asset_tag ?? a.assetTag ?? "";
-                const assignedToId =
-                    assignedUserIdByAssetId.get(String(assetId)) ||
-                    assignedUserIdByAssetTag.get(String(assetTag)) ||
-                    "";
-
-                const rowObj = { ...a, asset_tag: assetTag, assigned_to_employee_id: assignedToId };
-                const row = headers.map(h => csvCell(rowObj[h]));
-                lines.push(row.join(","));
-            }
-
-            downloadBlob(lines.join("\n"), "assets.csv", "text/csv");
-        }
-
-        function exportExcel() {
-            if (!assets.length) { alert("No data to export"); return; }
-
-            const exportRows = assets.map(a => {
-                const assetId = a.asset_id ?? a.assetId ?? "";
-                const assetTag = a.asset_tag ?? a.assetTag ?? "";
-                const assignedToId =
-                    assignedUserIdByAssetId.get(String(assetId)) ||
-                    assignedUserIdByAssetTag.get(String(assetTag)) ||
-                    "";
-
-                return { ...a, asset_tag: assetTag, assigned_to_employee_id: assignedToId };
-            });
-
-            const ws = XLSX.utils.json_to_sheet(exportRows);
-            const wb = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(wb, ws, "Assets");
-            XLSX.writeFile(wb, "assets.xlsx");
-        }
-
-        function exportPDF() {
-            if (!assets.length) { alert("No data to export"); return; }
-            const { jsPDF } = window.jspdf;
-            const doc = new jsPDF();
-            doc.text("Inventory Assets Report", 14, 12);
-
-            const headers = [["Asset Tag", "Brand", "Model", "Serial", "Status", "Assigned To (Emp ID)", "Condition", "Location", "Cost", "Warranty"]];
-            const body = assets.map(a => {
-                const assetId = a.asset_id ?? a.assetId ?? "";
-                const assetTag = a.asset_tag ?? a.assetTag ?? "";
-                const assignedToId =
-                    assignedUserIdByAssetId.get(String(assetId)) ||
-                    assignedUserIdByAssetTag.get(String(assetTag)) ||
-                    "";
-
-                return [
-                    assetTag,
-                    a.brand || "",
-                    a.model || "",
-                    a.serial_number || "",
-                    a.status || "",
-                    assignedToId,
-                    a.condition_status || "",
-                    a.location || "",
-                    String(a.purchase_cost ?? ""),
-                    a.warranty_expiry || ""
-                ];
-            });
-
-            doc.autoTable({ head: headers, body, startY: 18, styles: { fontSize: 8 } });
-            doc.save("assets.pdf");
-        }
-
-        function downloadBlob(content, filename, mime) {
-            const blob = new Blob([content], { type: mime });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement("a");
-            a.href = url;
-            a.download = filename;
-            a.click();
-            URL.revokeObjectURL(url);
-        }
-
-        function csvCell(v) {
-            const s = (v ?? "").toString().replaceAll('"', '""');
-            return `"${s}"`;
-        }
-
-        function escapeHtml(v) {
-            return (v ?? "").toString()
-                .replaceAll("&", "&amp;")
-                .replaceAll("<", "&lt;")
-                .replaceAll(">", "&gt;")
-                .replaceAll('"', "&quot;")
-                .replaceAll("'", "&#039;");
-        }
-
-        loadAll();
-    </script>
+    /* ── LOAD ───────────────────────────────────────────── */
+    function renderEmpty(msg) { document.getElementById("tBody").innerHTML = `<tr><td colspan="9" class="empty-c">${es(msg)}</td></tr>`;["kpiUsers", "kpiTotal", "kpiAvail", "kpiAssigned", "kpiMaint", "kpiOverdue"].forEach(id => { const el = document.getElementById(id); if (el) el.textContent = "0"; }); dc(); }
+    async function loadAll() {
+      const h = authH();
+      if (!h.Authorization) { setStatus("warn", "No token"); renderEmpty("Token missing. Run: localStorage.setItem(\"token\",\"JWT\") then refresh."); return; }
+      setStatus("warn", "Connecting…");
+      const ok = await detectApi(h);
+      if (!ok) { setStatus("err", "API not found"); renderEmpty("Cannot reach backend at port 8000. Ensure the server is running."); return; }
+      try {
+        assets = norm(await fj(EP.aUrl, h));
+        try { assignments = EP.asUrl ? norm(await fj(EP.asUrl, h)) : []; } catch { assignments = []; }
+        try { users = EP.uUrl ? norm(await fj(EP.uUrl, h)) : []; } catch { users = []; }
+        buildUMaps(); buildAMaps(); setKPIs(); renderCharts(); renderTable();
+        setStatus("ok", `${assets.length} assets loaded`);
+      } catch (e) { setStatus("err", "Failed"); renderEmpty("Error: " + e.message); }
+    }
+    (function () { setStatus("warn", getToken() ? "Token found" : "No token"); loadAll(); })();
+  </script>
 </body>
 
 </html>

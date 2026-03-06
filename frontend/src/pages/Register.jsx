@@ -12,6 +12,10 @@ const Register = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [role, setRole] = useState("Employee");
+  const [phone, setPhone] = useState("");
+  const [designation, setDesignation] = useState("");
+  const [department, setDepartment] = useState("");
+  const [location, setLocation] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -19,7 +23,17 @@ const Register = () => {
     e.preventDefault();
     setError("");
     setLoading(true);
-    const res = await register(employeeCode, name, email, password, role);
+    const res = await register(
+      employeeCode,
+      name,
+      email,
+      password,
+      role,
+      phone || null,
+      designation || null,
+      department || null,
+      location || null
+    );
     setLoading(false);
     if (res.success) {
       alert("User registered successfully!");
@@ -35,7 +49,7 @@ const Register = () => {
       <div className="app-body">
         <Sidebar />
         <div className="page-content">
-          <div style={{ maxWidth: "520px" }}>
+          <div style={{ maxWidth: "600px" }}>
             <div className="page-header">
               <div className="page-header-left">
                 <div className="page-eyebrow">Administration</div>
@@ -74,9 +88,31 @@ const Register = () => {
                     <input type="email" className="form-input" placeholder="john@company.com" value={email} onChange={e => setEmail(e.target.value)} required />
                   </div>
 
+                  <div className="form-row">
+                    <div className="form-group">
+                      <label className="form-label">Phone</label>
+                      <input type="tel" className="form-input" placeholder="+1 (555) 000-0000" value={phone} onChange={e => setPhone(e.target.value)} />
+                    </div>
+                    <div className="form-group">
+                      <label className="form-label">Password *</label>
+                      <input type="password" className="form-input" placeholder="Choose a strong password" value={password} onChange={e => setPassword(e.target.value)} required />
+                    </div>
+                  </div>
+
+                  <div className="form-row">
+                    <div className="form-group">
+                      <label className="form-label">Designation</label>
+                      <input className="form-input" placeholder="e.g. Software Engineer" value={designation} onChange={e => setDesignation(e.target.value)} />
+                    </div>
+                    <div className="form-group">
+                      <label className="form-label">Department *</label>
+                      <input className="form-input" placeholder="e.g. IT, HR, Finance" value={department} onChange={e => setDepartment(e.target.value)} required />
+                    </div>
+                  </div>
+
                   <div className="form-group">
-                    <label className="form-label">Password *</label>
-                    <input type="password" className="form-input" placeholder="Choose a strong password" value={password} onChange={e => setPassword(e.target.value)} required />
+                    <label className="form-label">Location</label>
+                    <input className="form-input" placeholder="e.g. New York Office" value={location} onChange={e => setLocation(e.target.value)} />
                   </div>
 
                   <div style={{ display: "flex", gap: "12px", marginTop: "4px" }}>

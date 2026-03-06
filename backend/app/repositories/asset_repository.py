@@ -10,7 +10,7 @@ def get_all_assets() -> List[dict]:
         SELECT asset_id, asset_tag, serial_number, category_id, brand, model,
         configuration, purchase_date, purchase_cost, depreciation_years,
         current_value, warranty_expiry, location, condition_status, status,
-        last_audit_date, created_at FROM Assets
+        last_audit_date, invoice_path, created_at FROM Assets
     """
     
     cursor.execute(query)
@@ -27,7 +27,7 @@ def get_asset_by_id(asset_id: int) -> Optional[dict]:
         SELECT asset_id, asset_tag, serial_number, category_id, brand, model,
         configuration, purchase_date, purchase_cost, depreciation_years,
         current_value, warranty_expiry, location, condition_status, status,
-        last_audit_date, created_at FROM Assets 
+        last_audit_date, invoice_path, created_at FROM Assets 
         WHERE asset_id = ?
     """, (asset_id,))
     
@@ -53,7 +53,8 @@ def create_asset(
     purchase_cost: float = None,
     depreciation_years: int = None,
     warranty_expiry: date = None,
-    location: str = None
+    location: str = None,
+    invoice_path: str = None
 ) -> int:
     conn = get_db_connection()
     cursor = conn.cursor()
@@ -62,14 +63,14 @@ def create_asset(
         INSERT INTO Assets (
             asset_tag, serial_number, category_id, brand, model, configuration,
             purchase_date, purchase_cost, depreciation_years, current_value, 
-            warranty_expiry, location, condition_status, status
+            warranty_expiry, location, condition_status, status, invoice_path
         ) OUTPUT INSERTED.asset_id VALUES (
-            ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
+            ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
         )
         """,
         (asset_tag, serial_number, category_id, brand, model, configuration,
          purchase_date, purchase_cost, depreciation_years, purchase_cost, # Initially, current_value = purchase_cost
-         warranty_expiry, location, condition_status, status)
+         warranty_expiry, location, condition_status, status, invoice_path)
     )
     new_id = cursor.fetchone()[0]
     conn.commit()

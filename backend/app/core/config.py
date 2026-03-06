@@ -26,3 +26,4 @@ class Settings(BaseSettings):
 
 # Create a settings instance
 settings = Settings()
+print(f"Settings loaded. SMTP_USER: {settings.SMTP_USER}, SMTP_SERVER: {settings.SMTP_SERVER}")

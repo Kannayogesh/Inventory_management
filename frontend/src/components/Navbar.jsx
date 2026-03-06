@@ -20,8 +20,10 @@ const Navbar = () => {
   return (
     <nav className="navbar">
       <div className="navbar-brand">
-        <div className="brand-icon">📦</div>
-        <span>AssetFlow</span>
+        <div className="brand-icon" title="PAL Inventory System">
+          <img src="/PAL logo.jpeg" alt="PAL logo" style={{ height: "30px", width: "auto" }} />
+        </div>
+        <span>PAL Inventory System</span>
       </div>
 
       <div className="navbar-right">

@@ -27,6 +27,7 @@ def create_asset(asset_data: AssetCreate):
         depreciation_years=asset_data.depreciation_years,
         warranty_expiry=asset_data.warranty_expiry,
         location=asset_data.location,
+        invoice_path=asset_data.invoice_path,
     )
     return get_asset(new_id)
 

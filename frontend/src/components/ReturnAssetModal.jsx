@@ -14,7 +14,7 @@ const ReturnAssetModal = ({ assignment, close, onRefresh }) => {
         condition_at_return: condition,
         remarks: remarks || undefined,
       });
-      onRefresh();
+      onRefresh("Asset returned successfully. Email notification sent.");
       close();
     } catch (error) {
       alert(error.message);

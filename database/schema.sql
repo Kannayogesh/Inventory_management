@@ -80,6 +80,7 @@ CREATE TABLE Assets (
     condition_status VARCHAR(30) NOT NULL CHECK (condition_status IN ('New', 'Good', 'Fair', 'Damaged')),
     status VARCHAR(30) NOT NULL CHECK (status IN ('Available', 'Assigned', 'Maintenance', 'Retired')),
     last_audit_date DATE NULL,
+    invoice_path VARCHAR(500) NULL,
     created_at DATETIME2 NOT NULL DEFAULT SYSDATETIME(),
     
     CONSTRAINT FK_Assets_Category FOREIGN KEY (category_id) REFERENCES Asset_Categories(category_id)

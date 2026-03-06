@@ -1,0 +1,89 @@
+{
+    "assets": [
+        {
+            "asset_id": 1,
+            "asset_tag": "01",
+            "serial_number": "1234",
+            "category_id": 1,
+            "brand": "dell",
+            "model": "model1",
+            "configuration": "16gb ram",
+            "purchase_date": "2023-01-01",
+            "purchase_cost": "75000.00",
+            "depreciation_years": 3,
+            "current_value": "75000.00",
+            "warranty_expiry": "2028-12-31",
+            "location": "sachin block",
+            "condition_status": "Good",
+            "status": "Assigned",
+            "last_audit_date": null,
+            "invoice_path": null,
+            "created_at": "2026-03-05 21:39:26.060028"
+        },
+        {
+            "asset_id": 2,
+            "asset_tag": "02",
+            "serial_number": "12345",
+            "category_id": 1,
+            "brand": "macbook",
+            "model": "model02",
+            "configuration": "8gb",
+            "purchase_date": "2026-03-05",
+            "purchase_cost": "100000.00",
+            "depreciation_years": 3,
+            "current_value": "100000.00",
+            "warranty_expiry": "2029-11-30",
+            "location": "vb block",
+            "condition_status": "New",
+            "status": "Assigned",
+            "last_audit_date": null,
+            "invoice_path": null,
+            "created_at": "2026-03-05 21:40:39.662598"
+        }
+    ],
+    "users": [
+        {
+            "user_id": 2,
+            "employee_code": "123",
+            "full_name": "chithu",
+            "email": "chithrabalaji27@gmail.com",
+            "phone": null,
+            "role": "Employee",
+            "designation": null,
+            "department": null,
+            "location": null,
+            "joining_date": null,
+            "status": "Active"
+        },
+        {
+            "user_id": 5,
+            "employee_code": "emp09",
+            "full_name": "deepika",
+            "email": "deepika@gmail.com",
+            "phone": null,
+            "role": "Employee",
+            "designation": null,
+            "department": null,
+            "location": null,
+            "joining_date": null,
+            "status": "Active"
+        }
+    ],
+    "categories": [
+        {
+            "category_id": 1,
+            "category_name": "Laptops",
+            "description": null
+        },
+        {
+            "category_id": 2,
+            "category_name": "Desktops",
+            "description": null
+        }
+    ],
+    "counts": {
+        "assets": 7,
+        "users": 7,
+        "categories": 6
+    }
+}

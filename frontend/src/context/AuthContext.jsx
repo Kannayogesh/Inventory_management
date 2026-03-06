@@ -31,7 +31,7 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  const register = async (employeeCode, name, email, password, role) => {
+  const register = async (employeeCode, name, email, password, role, phone = null, designation = null, department = null, location = null, joining_date = null) => {
     try {
       await apiFetch("/auth/register", {
         method: "POST",
@@ -41,6 +41,11 @@ export const AuthProvider = ({ children }) => {
           email,
           password,
           role,
+          phone,
+          designation,
+          department,
+          location,
+          joining_date,
         }),
       });
       return { success: true };
