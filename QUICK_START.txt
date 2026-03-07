@@ -1,0 +1,107 @@
+================================================================================
+QUICK REFERENCE - INVENTORY MANAGEMENT SYSTEM
+================================================================================
+
+MINIMUM REQUIREMENTS:
+  • Python 3.11+
+  • Node.js (Latest LTS)
+  • SQL Server
+  • 4GB RAM minimum
+
+FIRST TIME SETUP (Copy and Paste):
+
+------------------------------------
+STEP 1: Backend Setup
+------------------------------------
+cd backend
+python -m venv venv
+venv\Scripts\activate.bat
+pip install fastapi uvicorn pydantic pydantic-settings python-jose[cryptography] bcrypt python-dotenv pyodbc requests
+python -m uvicorn app.main:app --reload
+
+Keep this terminal open!
+
+------------------------------------
+STEP 2: Frontend Setup (New Terminal)
+------------------------------------
+cd frontend
+npm install
+npm run dev
+
+Keep this terminal open!
+
+------------------------------------
+STEP 3: Access Application
+------------------------------------
+Open browser: http://localhost:5173
+Login with:
+  Code: ADMIN-001
+  Password: admin123
+
+USEFUL URLS:
+  • App: http://localhost:5173
+  • API Docs: http://localhost:8000/docs
+  • API Health: http://localhost:8000
+
+DATABASE SETUP:
+  1. Create database: ITInventoryDB
+  2. Execute: database/schema.sql
+
+ENVIRONMENT FILE (.env in backend folder):
+  SECRET_KEY=supersecretkey
+  ACCESS_TOKEN_EXPIRE_MINUTES=60
+  DATABASE_URL=DRIVER={ODBC Driver 18 for SQL Server};SERVER=localhost;DATABASE=ITInventoryDB;Trusted_Connection=yes;TrustServerCertificate=yes;
+  SMTP_SERVER=smtp.gmail.com
+  SMTP_PORT=587
+  SMTP_USER=your-email@gmail.com
+  SMTP_PASSWORD=your-app-password
+
+================================================================================
+SUBSEQUENT RUNS:
+
+TERMINAL 1 (Backend):
+  cd backend
+  venv\Scripts\activate.bat
+  python -m uvicorn app.main:app --reload
+
+TERMINAL 2 (Frontend):
+  cd frontend
+  npm run dev
+
+STOP: Press Ctrl + C in each terminal
+
+================================================================================
+TROUBLESHOOTING QUICK FIXES:
+
+Can't find python?
+  → Install Python from python.org and restart Command Prompt
+
+Can't find npm?
+  → Install Node.js from nodejs.org and restart Command Prompt
+
+Virtual environment won't activate (PowerShell)?
+  → Run: Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
+
+Port already in use?
+  → python -m uvicorn app.main:app --port 8001 --reload
+  → npm run dev -- --port 5174
+
+Database connection error?
+  → Install ODBC Driver 18 from Microsoft
+  → Verify SQL Server is running
+  → Check database name is "ITInventoryDB"
+
+================================================================================
+FEATURES:
+✓ User Authentication & RBAC
+✓ Asset Management
+✓ Asset Assignment & Returns
+✓ Maintenance Tracking
+✓ Procurement Management
+✓ Analytics Dashboard
+✓ Report Generation
+✓ Email Notifications
+
+================================================================================
+For detailed setup, see: SETUP_GUIDE.txt
+Last Updated: March 7, 2026

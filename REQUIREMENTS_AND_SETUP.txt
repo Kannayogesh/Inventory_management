@@ -1,0 +1,415 @@
+================================================================================
+SYSTEM REQUIREMENTS & DEPENDENCIES
+================================================================================
+
+PROJECT: Inventory Management System
+Version: 1.0.1
+Last Updated: March 7, 2026
+
+================================================================================
+SYSTEM REQUIREMENTS
+================================================================================
+
+REQUIRED:
+----------
+Operating System:
+  • Windows 10/11, macOS 10.15+, or Linux (Ubuntu 18.04+)
+
+Storage:
+  • Minimum: 2GB free disk space
+  • Recommended: 5GB for comfortable operation
+
+RAM:
+  • Minimum: 4GB
+  • Recommended: 8GB
+
+Internet:
+  • Required during initial setup (for package downloads)
+  • Optional after installation
+
+REQUIRED SOFTWARE:
+  • Python 3.11 or higher
+  • Node.js 16.x or higher (LTS recommended)
+  • SQL Server 2016 or higher (Express edition sufficient)
+  • ODBC Driver 18 for SQL Server (for database connectivity)
+
+
+================================================================================
+PYTHON DEPENDENCIES (Backend)
+================================================================================
+
+Package Installation Command:
+  pip install fastapi uvicorn pydantic pydantic-settings python-jose[cryptography] bcrypt python-dotenv pyodbc requests
+
+Individual Packages with Versions:
+
+fastapi==0.104.0 or later
+  - Web framework for building APIs
+  - Purpose: Handle HTTP requests and routing
+
+uvicorn==0.24.0 or later
+  - ASGI server for Python
+  - Purpose: Run FastAPI application
+
+pydantic==2.0.0 or later
+  - Data validation and parsing
+  - Purpose: Validate request/response data
+
+pydantic-settings==2.0.0 or later
+  - Settings management using Pydantic
+  - Purpose: Manage environment variables
+
+python-jose[cryptography]==3.3.0 or later
+  - JWT token handling
+  - Purpose: Create and verify JWT tokens for authentication
+
+bcrypt==4.0.0 or later
+  - Password hashing
+  - Purpose: Hash passwords securely
+
+python-dotenv==1.0.0 or later
+  - Load environment variables from .env file
+  - Purpose: Manage configuration locally
+
+pyodbc==5.0.0 or later
+  - Database driver for SQL Server
+  - Purpose: Connect to SQL Server database
+
+requests==2.31.0 or later
+  - HTTP client library
+  - Purpose: Make HTTP requests (for email sending)
+
+
+================================================================================
+NODE.JS DEPENDENCIES (Frontend)
+================================================================================
+
+Package Installation Command:
+  npm install
+
+Dependencies listed in frontend/package.json:
+
+React Ecosystem:
+  react@^19.2.0
+    - JavaScript library for building user interfaces
+
+  react-dom@^19.2.0
+    - DOM rendering library for React
+
+  react-router-dom@^7.13.1
+    - Client-side routing for React
+
+Charts & Visualization:
+  recharts@^3.7.0
+    - Composable charting library
+
+  chart.js@^4.5.1
+    - JavaScript charting library (optional, for additional charts)
+
+Data Handling:
+  xlsx@^0.18.5
+    - Excel file reading and writing
+    - Purpose: Export/Import asset data to Excel
+
+PDF Generation:
+  jspdf@^4.2.0
+    - PDF document generation
+    - Purpose: Generate PDF reports
+
+  jspdf-autotable@^5.0.7
+    - Auto table generation for jsPDF
+    - Purpose: Create formatted tables in PDFs
+
+  html2canvas@^1.4.1
+    - HTML to canvas conversion
+    - Purpose: Convert dashboard to images for PDF export
+
+Build Tool:
+  vite@^5.0.0+
+    - Lightning-fast frontend build tool
+    - Purpose: Compile React code for production
+
+Dev Dependencies:
+  @vitejs/plugin-react@^5.1.1
+  eslint@^9.39.1
+  @eslint/js@^9.39.1
+  eslint-plugin-react-refresh@^0.4.24
+  eslint-plugin-react-hooks@^7.0.1
+  @types/react@^19.2.7
+  @types/react-dom@^19.2.3
+
+
+================================================================================
+DATABASE REQUIREMENTS
+================================================================================
+
+Database System:
+  • SQL Server 2016 or higher
+  • Express Edition is sufficient for development/small deployments
+  • Standard or Enterprise for large deployments
+
+Database Configuration:
+  Database Name: ITInventoryDB
+  Authentication: Windows Authentication (Trusted Connection)
+  Compatibility Level: 130 or higher
+
+Required ODBC Driver:
+  ODBC Driver 18 for SQL Server
+  Download: https://learn.microsoft.com/en-us/sql/connect/odbc/download-odbc-driver-for-sql-server
+
+Connection String Format:
+  DRIVER={ODBC Driver 18 for SQL Server};SERVER=localhost;DATABASE=ITInventoryDB;Trusted_Connection=yes;TrustServerCertificate=yes;
+
+Alternative Connection (SQL Authentication):
+  DRIVER={ODBC Driver 18 for SQL Server};SERVER=servername;DATABASE=ITInventoryDB;UID=username;PWD=password;
+
+
+================================================================================
+ENVIRONMENT VARIABLES (.env file)
+================================================================================
+
+Create a .env file in the backend/ folder with these variables:
+
+Security:
+  SECRET_KEY=your-secret-key-here
+    - Used for JWT token signing
+    - Change in production to a secure random string
+
+  ACCESS_TOKEN_EXPIRE_MINUTES=60
+    - JWT token expiration time in minutes
+
+Database:
+  DATABASE_URL=DRIVER={ODBC Driver 18 for SQL Server};SERVER=localhost;DATABASE=ITInventoryDB;Trusted_Connection=yes;TrustServerCertificate=yes;
+    - Connection string for SQL Server database
+
+Email (Optional, for notifications):
+  SMTP_SERVER=smtp.gmail.com
+    - SMTP server address
+
+  SMTP_PORT=587
+    - SMTP server port
+
+  SMTP_USER=your-email@gmail.com
+    - Email account for sending notifications
+
+  SMTP_PASSWORD=your-app-password
+    - Email account password or app-specific password
+
+
+================================================================================
+INSTALLATION VERIFICATION
+================================================================================
+
+Verify Python Installation:
+  Command: python --version
+  Expected: Python 3.11.x or higher
+
+Verify Node.js Installation:
+  Command: node --version
+  Expected: v16.x or higher
+  Command: npm --version
+  Expected: v8.x or higher
+
+Verify SQL Server Connection:
+  Use: SQL Server Management Studio or similar tool
+  Check: Can connect to localhost
+  Verify: ITInventoryDB database exists
+
+Verify ODBC Driver:
+  Windows: Settings → Apps → Apps & features
+  Look for: ODBC Driver 18 for SQL Server
+
+Verify Backend Setup:
+  Command: cd backend && python -m uvicorn app.main:app --reload
+  Expected: "Application startup complete"
+
+Verify Frontend Setup:
+  Command: cd frontend && npm run dev
+  Expected: "VITE v7.x.x ready in XXX ms"
+
+
+================================================================================
+RECOMMENDED DEVELOPMENT TOOLS
+================================================================================
+
+Code Editor:
+  • Visual Studio Code (recommended)
+  • PyCharm (for Python development)
+  • WebStorm (for JavaScript development)
+
+Database Management:
+  • SQL Server Management Studio (SSMS)
+  • Azure Data Studio (cross-platform)
+  • DBeaver (free, multi-database)
+
+API Testing:
+  • Postman (desktop app)
+  • Insomnia (alternative)
+  • Built-in Swagger UI at http://localhost:8000/docs
+
+Version Control:
+  • Git (command line)
+  • GitHub Desktop (GUI)
+
+Terminal/Console:
+  • Windows Terminal (Windows)
+  • iTerm2 (macOS)
+  • GNOME Terminal (Linux)
+
+
+================================================================================
+HARDWARE RECOMMENDATIONS
+================================================================================
+
+MINIMUM SETUP (Development):
+  • CPU: Intel i5 or equivalent
+  • RAM: 4GB
+  • Storage: 2GB
+  • Internet: 5 Mbps
+
+RECOMMENDED SETUP (Development):
+  • CPU: Intel i7 or equivalent
+  • RAM: 8GB
+  • Storage: 5GB SSD
+  • Internet: 10+ Mbps
+
+PRODUCTION SETUP (Small Organization):
+  • CPU: Intel Xeon or equivalent dual-core
+  • RAM: 16GB
+  • Storage: 50GB SSD
+  • Internet: 50+ Mbps
+
+
+================================================================================
+PORT REQUIREMENTS
+================================================================================
+
+Default Ports Used:
+  • Backend API: 8000 (http://localhost:8000)
+  • Frontend: 5173 (http://localhost:5173)
+  • SQL Server: 1433 (local)
+
+If ports conflict, use alternatives:
+  Backend:
+    python -m uvicorn app.main:app --port 8001 --reload
+
+  Frontend:
+    npm run dev -- --port 5174
+
+
+================================================================================
+BANDWIDTH & STORAGE REQUIREMENTS
+================================================================================
+
+Initial Download:
+  • npm packages: ~300MB
+  • pip packages: ~150MB
+  • Total: ~450MB
+
+Runtime Storage:
+  • Database: 1-5GB (depending on data volume)
+  • Uploaded files: Variable
+  • Logs: ~100MB per month
+
+Bandwidth:
+  • Initial setup: 500MB download
+  • Daily usage: <100MB (typical)
+
+
+================================================================================
+SECURITY NOTES
+================================================================================
+
+Development:
+  • Default credentials provided (ADMIN-001 / admin123)
+  • Change these immediately in production
+  • Use HTTPS instead of HTTP in production
+  • Enable email notifications for security events
+
+Production:
+  • Use strong SECRET_KEY (minimum 32 characters)
+  • Configure proper SMTP for email notifications
+  • Use email authentication (app-specific passwords)
+  • Set up proper SQL Server backups
+  • Enable Windows Firewall rules
+  • Keep all software updated
+
+
+================================================================================
+TROUBLESHOOTING REFERENCE
+================================================================================
+
+Issue: ModuleNotFoundError
+Solution: 
+  1. Ensure virtual environment is activated
+  2. Run: pip install -r requirements.txt
+  3. Verify Python version: python --version
+
+Issue: npm ERR! code EACCES (permission denied)
+Solution:
+  1. Don't use sudo with npm
+  2. Fix npm permissions: npm config set prefix '~/.npm-global'
+  3. Add to PATH: export PATH=~/.npm-global/bin:$PATH
+
+Issue: ODBC Driver not found
+Solution:
+  1. Download ODBC Driver 18 from Microsoft
+  2. Run installer as Administrator
+  3. Restart application after installation
+
+Issue: SQL Server connection refused
+Solution:
+  1. Verify SQL Server service is running
+  2. Check server name in connection string
+  3. Test with sqlcmd: sqlcmd -S localhost -E
+
+Issue: Port already in use
+Solution:
+  1. Find process using port (Windows): netstat -ano | findstr :8000
+  2. Kill process: taskkill /PID <PID> /F
+  3. Or use different port (see PORT REQUIREMENTS section)
+
+
+================================================================================
+SUPPORT & DOCUMENTATION
+================================================================================
+
+Official Documentation:
+  • FastAPI: https://fastapi.tiangolo.com/
+  • React: https://react.dev/
+  • Pydantic: https://docs.pydantic.dev/
+  • SQL Server: https://learn.microsoft.com/en-us/sql/
+
+Project Repository:
+  https://github.com/Kannayogesh/Inventory_management
+
+When reporting issues, include:
+  • Python version: python --version
+  • Node version: node --version
+  • Operating System
+  • Error message (full text)
+  • Steps to reproduce
+  • Screenshot if applicable
+
+
+================================================================================
+CHANGELOG
+================================================================================
+
+Version 1.0.1 (Current)
+  • Full-stack inventory management system
+  • User authentication with JWT
+  • Role-based access control
+  • Asset management and tracking
+  • Assignment and return workflows
+  • Maintenance request system
+  • Analytics dashboard
+  • PDF/Excel report generation
+  • Email notifications
+  • Audit logging
+
+
+================================================================================
+END OF REQUIREMENTS DOCUMENT
+================================================================================
+Last Updated: March 7, 2026

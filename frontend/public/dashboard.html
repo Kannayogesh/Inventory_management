@@ -737,7 +737,7 @@
       <div class="th">
         <div>
           <h2>Asset Library</h2>
-          <p>Assigned To shows employee name · <code style="font-size:10.5px">localStorage.setItem("token","…")</code>
+          <p>Assigned To shows employee name · <code style="font-size:10.5px"></code>
           </p>
         </div>
         <div class="thR">
@@ -796,7 +796,7 @@
     /* ── AUTH ───────────────────────────────────────────── */
     function getToken() { return (localStorage.getItem("token") || "").trim() || null; }
     function authH() { const t = getToken(); if (!t) return {}; return { Authorization: t.startsWith("Bearer ") ? t : "Bearer " + t }; }
-    function clearToken() { localStorage.removeItem("token"); setStatus("warn", "Logged out"); renderEmpty("Token cleared. Set localStorage.setItem(\"token\",\"...\") and refresh."); }
+    function clearToken() { localStorage.removeItem("token"); setStatus("warn", "Logged out"); renderEmpty("You have been logged out."); }
 
     /* ── STATUS ─────────────────────────────────────────── */
     function setStatus(kind, label) {
@@ -1081,7 +1081,7 @@
     function renderEmpty(msg) { document.getElementById("tBody").innerHTML = `<tr><td colspan="9" class="empty-c">${es(msg)}</td></tr>`;["kpiUsers", "kpiTotal", "kpiAvail", "kpiAssigned", "kpiMaint", "kpiOverdue"].forEach(id => { const el = document.getElementById(id); if (el) el.textContent = "0"; }); dc(); }
     async function loadAll() {
       const h = authH();
-      if (!h.Authorization) { setStatus("warn", "No token"); renderEmpty("Token missing. Run: localStorage.setItem(\"token\",\"JWT\") then refresh."); return; }
+      if (!h.Authorization) { setStatus("warn", "No token"); renderEmpty("Please log in to view data."); return; }
       setStatus("warn", "Connecting…");
       const ok = await detectApi(h);
       if (!ok) { setStatus("err", "API not found"); renderEmpty("Cannot reach backend at port 8000. Ensure the server is running."); return; }

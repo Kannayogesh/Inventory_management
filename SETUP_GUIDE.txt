@@ -1,0 +1,450 @@
+================================================================================
+INVENTORY MANAGEMENT SYSTEM - COMPLETE SETUP GUIDE
+================================================================================
+
+This guide covers everything needed to run the application from scratch.
+
+================================================================================
+SECTION 1: PREREQUISITES
+================================================================================
+
+Before starting, ensure you have these installed on your system:
+
+1. Python 3.11+ 
+   - Download from: https://www.python.org/downloads/
+   - During installation, make sure to check "Add Python to PATH"
+   - Verify: Open Command Prompt and run: python --version
+
+2. Node.js (Latest LTS version)
+   - Download from: https://nodejs.org/
+   - Includes npm package manager
+   - Verify: Open Command Prompt and run: node --version and npm --version
+
+3. SQL Server (Express Edition or higher)
+   - Download from: https://www.microsoft.com/en-us/sql-server/sql-server-downloads
+   - Required for database
+   - Verify: SQL Server is running and accessible
+
+4. Git (Optional, for cloning repository)
+   - Download from: https://git-scm.com/downloads
+
+================================================================================
+SECTION 2: PROJECT SETUP
+================================================================================
+
+Step 1: Clone or Download the Repository
+--------
+Option A - Using Git (if installed):
+git clone https://github.com/Kannayogesh/Inventory_management.git
+cd Inventory_management
+
+Option B - Manual Download:
+Download the ZIP file and extract it to your desired location
+Open Command Prompt/PowerShell and navigate to the project folder
+
+
+Step 2: Verify Project Structure
+--------
+You should see these folders in the root directory:
+  - backend/
+  - frontend/
+  - database/
+
+Run this command to verify:
+dir /s /b | find "app" && find "src"
+
+
+================================================================================
+SECTION 3: BACKEND SETUP
+================================================================================
+
+Step 1: Navigate to Backend Directory
+--------
+cd backend
+
+
+Step 2: Create Python Virtual Environment
+--------
+python -m venv venv
+
+
+Step 3: Activate Virtual Environment
+--------
+Windows (Command Prompt):
+venv\Scripts\activate.bat
+
+Windows (PowerShell):
+venv\Scripts\Activate.ps1
+
+Mac/Linux:
+source venv/bin/activate
+
+Note: After activation, your command prompt should show (venv) at the beginning
+
+
+Step 4: Install Python Dependencies
+--------
+Copy and paste this command:
+
+pip install fastapi uvicorn pydantic pydantic-settings python-jose[cryptography] bcrypt python-dotenv pyodbc requests
+
+
+Step 5: Create Environment File
+--------
+A) In the backend folder, create a file named ".env"
+B) Copy and paste the following content:
+
+SECRET_KEY=supersecretkey
+ACCESS_TOKEN_EXPIRE_MINUTES=60
+DATABASE_URL=DRIVER={ODBC Driver 18 for SQL Server};SERVER=localhost;DATABASE=ITInventoryDB;Trusted_Connection=yes;TrustServerCertificate=yes;
+SMTP_SERVER=smtp.gmail.com
+SMTP_PORT=587
+SMTP_USER=your-email@gmail.com
+SMTP_PASSWORD=your-app-password
+
+Note: Replace SMTP_USER and SMTP_PASSWORD with your email credentials
+If you don't have email configured yet, leave them as is for now
+
+
+Step 6: Setup Database
+--------
+A) Open SQL Server Management Studio or similar tool
+B) Create a new database named: ITInventoryDB
+C) Open the database schema file and execute it:
+   - Navigate to: database/schema.sql
+   - Copy all the SQL content
+   - Execute it in your database to create tables
+
+
+Step 7: Verify Backend Setup
+--------
+Still in the backend folder, run:
+python -c "import app.main; print('Backend setup successful!')"
+
+
+Step 8: Start Backend Server
+--------
+Run this command (from backend folder):
+python -m uvicorn app.main:app --reload
+
+You should see output like:
+  Uvicorn running on http://127.0.0.1:8000 (Press CTRL+C to quit)
+  Application startup complete
+
+Leave this terminal running! Open API documentation at:
+  http://localhost:8000/docs
+
+
+================================================================================
+SECTION 4: FRONTEND SETUP
+================================================================================
+
+Step 1: Open New Terminal/Command Prompt
+--------
+IMPORTANT: Keep the backend terminal open and running
+Open a new terminal/command prompt window
+
+
+Step 2: Navigate to Frontend Directory
+--------
+cd frontend
+
+
+Step 3: Install Node Packages
+--------
+npm install
+
+This will download and install all dependencies. Takes 2-5 minutes.
+
+
+Step 4: Start Frontend Development Server
+--------
+npm run dev
+
+You should see output like:
+  VITE v7.3.1 ready in XXX ms
+  ➜  Local:   http://127.0.0.1:5173/
+
+Leave this terminal running!
+
+
+================================================================================
+SECTION 5: ACCESS THE APPLICATION
+================================================================================
+
+After both servers are running:
+
+1. Open your web browser (Chrome, Firefox, Edge, Safari, etc.)
+
+2. Go to: http://localhost:5173
+
+3. You should see the Login page
+
+4. Default Admin Credentials:
+   Employee Code: ADMIN-001
+   Password: admin123
+
+5. Log in and start using the application!
+
+
+================================================================================
+SECTION 6: USEFUL LINKS WHILE RUNNING
+================================================================================
+
+Application Frontend:
+  http://localhost:5173
+
+Backend API Documentation (Swagger):
+  http://localhost:8000/docs
+
+Backend API (OpenAPI JSON):
+  http://localhost:8000/openapi.json
+
+Backend Health Check:
+  http://localhost:8000/
+
+
+================================================================================
+SECTION 7: STOPPING THE APPLICATION
+================================================================================
+
+When you want to stop the application:
+
+Backend Terminal:
+  Press Ctrl + C
+
+Frontend Terminal:
+  Press Ctrl + C
+
+Both servers will stop cleanly
+
+
+================================================================================
+SECTION 8: RESTARTING AFTER STOPPING
+================================================================================
+
+To run the application again later:
+
+Terminal 1 (Backend):
+  cd backend
+  venv\Scripts\activate.bat (Windows) or source venv/bin/activate (Mac/Linux)
+  python -m uvicorn app.main:app --reload
+
+Terminal 2 (Frontend):
+  cd frontend
+  npm run dev
+
+Then access: http://localhost:5173
+
+
+================================================================================
+SECTION 9: TROUBLESHOOTING
+================================================================================
+
+Problem: Python command not recognized
+Solution: 
+  - Make sure Python is in your system PATH
+  - Restart Command Prompt/PowerShell after installing Python
+  - Run: python --version to verify
+
+Problem: Virtual environment won't activate
+Solution:
+  - Make sure you're in the backend folder
+  - Try the correct activation command for your OS
+  - On Windows PowerShell, you might need to run: Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
+
+Problem: npm command not recognized
+Solution:
+  - Make sure Node.js is installed
+  - Restart Command Prompt/PowerShell after installing Node.js
+  - Run: npm --version to verify
+
+Problem: Database connection fails
+Solution:
+  - Verify SQL Server is running
+  - Check database name is "ITInventoryDB"
+  - Check DRIVER={ODBC Driver 18 for SQL Server} is correct
+  - Install ODBC Driver 18 if needed from: https://learn.microsoft.com/en-us/sql/connect/odbc/download-odbc-driver-for-sql-server
+
+Problem: Port 8000 or 5173 already in use
+Solution:
+  - Another application is using the port
+  - Option 1: Close the application using that port
+  - Option 2: Use different port:
+    Backend: python -m uvicorn app.main:app --port 8001 --reload
+    Frontend: npm run dev -- --port 5174
+
+Problem: "ModuleNotFoundError: No module named 'app'"
+Solution:
+  - Make sure you're in the backend folder when running uvicorn
+  - Make sure virtual environment is activated
+  - Run: pip install -r requirements.txt again
+
+Problem: Frontend won't connect to backend
+Solution:
+  - Check backend is running at http://localhost:8000
+  - Check CORS is enabled (it should be by default)
+  - Try clearing browser cache (Ctrl+Shift+Delete)
+
+Problem: Package installation fails
+Solution:
+  - Make sure virtual environment is activated (for Python)
+  - Try installing individually: pip install fastapi
+  - Check internet connection
+  - Try: pip install --upgrade pip
+
+
+================================================================================
+SECTION 10: PROJECT STRUCTURE
+================================================================================
+
+backend/
+  ├── app/
+  │   ├── controllers/          # API endpoints
+  │   ├── services/             # Business logic
+  │   ├── repositories/         # Database queries
+  │   ├── schemas/              # Data validation
+  │   ├── core/                 # Config, database, security
+  │   ├── middleware/           # CORS, authentication
+  │   ├── utils/                # Helper functions
+  │   └── main.py               # FastAPI app entry point
+  ├── tests/                    # Test files
+  ├── requirements.txt          # Python dependencies
+  └── .env                      # Environment variables (create this)
+
+frontend/
+  ├── src/
+  │   ├── components/           # React components
+  │   ├── pages/                # Page components
+  │   ├── context/              # React context
+  │   ├── api.js                # API calls
+  │   ├── App.jsx               # Main app component
+  │   └── main.jsx              # Entry point
+  ├── package.json              # Node dependencies
+  └── vite.config.js            # Vite configuration
+
+database/
+  └── schema.sql                # Database schema definition
+
+
+================================================================================
+SECTION 11: SYSTEM REQUIREMENTS SUMMARY
+================================================================================
+
+Operating System:
+  - Windows 10/11, macOS, or Linux
+
+Memory:
+  - Minimum: 4GB RAM
+  - Recommended: 8GB RAM
+
+Storage:
+  - Minimum: 2GB free space
+
+Internet:
+  - Required during initial setup (npm install, pip install)
+  - Not required once installed
+
+
+================================================================================
+SECTION 12: QUICK START COMMAND SUMMARY
+================================================================================
+
+Copy these commands to quickly set up everything:
+
+WINDOWS (Command Prompt):
+---
+cd backend
+python -m venv venv
+venv\Scripts\activate.bat
+pip install fastapi uvicorn pydantic pydantic-settings python-jose[cryptography] bcrypt python-dotenv pyodbc requests
+python -m uvicorn app.main:app --reload
+
+(In new terminal):
+cd frontend
+npm install
+npm run dev
+
+WINDOWS (PowerShell):
+---
+cd backend
+python -m venv venv
+venv\Scripts\Activate.ps1
+pip install fastapi uvicorn pydantic pydantic-settings python-jose[cryptography] bcrypt python-dotenv pyodbc requests
+python -m uvicorn app.main:app --reload
+
+(In new terminal):
+cd frontend
+npm install
+npm run dev
+
+MAC/LINUX:
+---
+cd backend
+python3 -m venv venv
+source venv/bin/activate
+pip install fastapi uvicorn pydantic pydantic-settings python-jose[cryptography] bcrypt python-dotenv pyodbc requests
+python -m uvicorn app.main:app --reload
+
+(In new terminal):
+cd frontend
+npm install
+npm run dev
+
+
+================================================================================
+SECTION 13: FEATURES OVERVIEW
+================================================================================
+
+The Inventory Management System includes:
+
+✓ User Authentication (Login/Logout)
+✓ Role-Based Access Control (Admin, Asset Manager, Employee)
+✓ Asset Management (Add, Edit, Delete, Search)
+✓ Asset Assignment (Assign to employees, Track returns)
+✓ Maintenance Tracking (Request, Track repair status)
+✓ Procurement Management
+✓ Category Management
+✓ Analytics Dashboard
+✓ Report Generation
+✓ Email Notifications
+✓ Audit Logs
+✓ User Management
+
+
+================================================================================
+SECTION 14: GETTING HELP
+================================================================================
+
+If you encounter issues:
+
+1. Check the TROUBLESHOOTING section above
+2. Read error messages carefully - they usually indicate the problem
+3. Check if all prerequisites are properly installed
+4. Verify database is created and accessible
+5. Make sure both backend and frontend are running
+6. Try clearing browser cache (Ctrl+Shift+Delete)
+7. Check the README.md file in the project root
+
+
+================================================================================
+SECTION 15: NEXT STEPS
+================================================================================
+
+After successful setup:
+
+1. Test login with default admin credentials
+2. Create additional users as needed
+3. Add asset categories
+4. Add assets to the system
+5. Assign assets to employees
+6. Monitor dashboard and reports
+7. Configure email settings in .env file (optional)
+
+
+================================================================================
+END OF SETUP GUIDE
+================================================================================
+
+For more information, see README.md in the project root directory.
+Last Updated: March 7, 2026

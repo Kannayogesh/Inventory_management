@@ -1,0 +1,501 @@
+================================================================================
+ENVIRONMENT CONFIGURATION TEMPLATES
+================================================================================
+
+This file contains ready-to-use templates for environment configuration.
+
+
+================================================================================
+TEMPLATE 1: .env file (Backend Configuration)
+================================================================================
+
+Copy this entire section and create a file named ".env" in the backend/ folder.
+Put it in: backend/.env
+
+------- START - Copy from here -------
+
+SECRET_KEY=supersecretkey
+ACCESS_TOKEN_EXPIRE_MINUTES=60
+DATABASE_URL=DRIVER={ODBC Driver 18 for SQL Server};SERVER=localhost;DATABASE=ITInventoryDB;Trusted_Connection=yes;TrustServerCertificate=yes;
+SMTP_SERVER=smtp.gmail.com
+SMTP_PORT=587
+SMTP_USER=your-email@gmail.com
+SMTP_PASSWORD=your-app-password
+
+------- END - Copy to here -------
+
+INSTRUCTIONS:
+
+1. Open Notepad (or any text editor)
+
+2. Copy the above text (between START and END)
+
+3. Paste it into the text editor
+
+4. Replace the following with your actual values:
+   
+   a) SMTP_USER:
+      - Change "your-email@gmail.com" to your Gmail or other email
+      - This is used for sending notifications (optional)
+   
+   b) SMTP_PASSWORD:
+      - Change "your-app-password" to your email password
+      - For Gmail: Generate an App Password (see instructions below)
+      - Optional if you don't want email notifications
+   
+   c) DATABASE_URL:
+      - Change "localhost" to your SQL Server hostname if different
+      - Change "ITInventoryDB" if your database has a different name
+
+5. Save the file as ".env" (note the dot at the beginning)
+
+6. Save it in the backend/ folder
+
+7. That's it! The application will read this file automatically
+
+
+GMAIL APP PASSWORD SETUP (Optional, for email notifications):
+
+1. Go to: https://myaccount.google.com/
+2. Click "Security" on the left menu
+3. Scroll to "How you sign in to Google"
+4. Enable 2-Step Verification if not already enabled
+5. Go back to Security settings
+6. Scroll to "App passwords" (appears after 2FA is enabled)
+7. Select Mail and Windows Computer
+8. Google generates a password (16 characters)
+9. Copy this password to SMTP_PASSWORD in .env file
+10. Note: Space in password is okay, just copy exactly
+
+
+================================================================================
+TEMPLATE 2: Production .env (Secure Version)
+================================================================================
+
+For production environment, use stronger values:
+
+------- START - Copy from here -------
+
+SECRET_KEY=your-very-long-random-secret-key-minimum-32-characters-change-this
+ACCESS_TOKEN_EXPIRE_MINUTES=30
+DATABASE_URL=DRIVER={ODBC Driver 18 for SQL Server};SERVER=your-production-server;DATABASE=ITInventoryDB;UID=sa;PWD=your-strong-password;Encrypt=yes;TrustServerCertificate=no;
+SMTP_SERVER=smtp.your-company-email.com
+SMTP_PORT=587
+SMTP_USER=notifications@your-company.com
+SMTP_PASSWORD=your-strong-email-password
+
+------- END - Copy to here -------
+
+CHANGES FOR PRODUCTION:
+
+1. SECRET_KEY:
+   - Generate random 32+ character string
+   - Use: https://www.random.org/strings/ or equivalent
+   - Or use Python: python -c "import secrets; print(secrets.token_urlsafe(32))"
+
+2. DATABASE_URL:
+   - Change SERVER to your actual SQL Server hostname
+   - Change UID and PWD to production credentials
+   - Set Encrypt=yes for SSL connection
+   - Set TrustServerCertificate=no for proper validation
+
+3. ACCESS_TOKEN_EXPIRE_MINUTES:
+   - Change to 30 for better security
+   - Users will need to refresh token more often
+
+4. SMTP Settings:
+   - Use your company's email service
+   - Use service account credentials
+   - Enable proper email authentication
+
+
+================================================================================
+TEMPLATE 3: Local Development .env (Minimal)
+================================================================================
+
+For local development without email:
+
+------- START - Copy from here -------
+
+SECRET_KEY=dev-secret-key-change-in-production
+ACCESS_TOKEN_EXPIRE_MINUTES=60
+DATABASE_URL=DRIVER={ODBC Driver 18 for SQL Server};SERVER=localhost;DATABASE=ITInventoryDB;Trusted_Connection=yes;TrustServerCertificate=yes;
+
+------- END - Copy to here -------
+
+NOTE: This minimal configuration:
+- Works without email setup
+- Uses Windows authentication for database
+- Uses local SQL Server
+- NOT SUITABLE for production
+
+
+================================================================================
+TEMPLATE 4: Docker Database Connection
+================================================================================
+
+If using SQL Server in Docker container:
+
+------- START - Copy from here -------
+
+DATABASE_URL=DRIVER={ODBC Driver 18 for SQL Server};SERVER=host.docker.internal;DATABASE=ITInventoryDB;UID=sa;PWD=YourPassword123!;Encrypt=no;TrustServerCertificate=yes;
+
+------- END - Copy to here -------
+
+NOTES:
+- Use "host.docker.internal" instead of "localhost" for Docker
+- Replace "YourPassword123!" with actual SA password
+- Password must be complex (uppercase, lowercase, numbers, special chars)
+
+
+================================================================================
+TEMPLATE 5: Alternative Database Server
+================================================================================
+
+If using named SQL Server instance:
+
+------- START - Copy from here -------
+
+DATABASE_URL=DRIVER={ODBC Driver 18 for SQL Server};SERVER=localhost\SQLEXPRESS;DATABASE=ITInventoryDB;Trusted_Connection=yes;TrustServerCertificate=yes;
+
+------- END - Copy to here -------
+
+For different servers:
+- localhost\SQLEXPRESS - SQL Server Express (default)
+- SERVERNAME - Named server on network
+- IP_ADDRESS\INSTANCE - Remote SQL Server with instance
+
+
+================================================================================
+TEMPLATE 6: Complete Configuration Checklist
+================================================================================
+
+Use this checklist to ensure all configurations are in place:
+
+□ Backend Setup:
+  □ Virtual environment created (backend/venv/)
+  □ Virtual environment activated
+  □ Requirements installed (pip install...)
+  □ .env file created (backend/.env)
+  □ Database created (ITInventoryDB)
+  □ schema.sql executed in database
+
+□ Frontend Setup:
+  □ npm packages installed (node_modules/)
+  □ Vite configuration ready
+  □ No port conflicts
+
+□ Environment Variables:
+  □ SECRET_KEY set
+  □ DATABASE_URL correctly configured
+  □ SQL Server connection tested
+  □ SMTP settings configured (optional)
+
+□ Database:
+  □ SQL Server is running
+  □ Database "ITInventoryDB" exists
+  □ Tables created from schema.sql
+  □ ODBC driver 18 installed
+
+□ Testing:
+  □ Backend starts without errors
+  □ Frontend starts without errors
+  □ Can access http://localhost:5173
+  □ Can access http://localhost:8000/docs
+  □ Can login with ADMIN-001 / admin123
+
+
+================================================================================
+TEMPLATE 7: Environment Variables Explanation
+================================================================================
+
+DETAILED DESCRIPTION OF EACH VARIABLE:
+
+SECRET_KEY
+  What: Cryptographic key for JWT signing
+  Where: Used in authentication tokens
+  Format: Random string
+  Example: "my-super-secret-key"
+  Production: Must be long (32+ chars) and random
+  Security: Never share or commit to Git
+
+ACCESS_TOKEN_EXPIRE_MINUTES
+  What: How long authentication token remains valid
+  Measurement: Minutes
+  Example: 60 = 1 hour
+  Development: 60 is fine
+  Production: Use 30 for security
+  Note: Users must re-login after expiration
+
+DATABASE_URL
+  What: Connection string for SQL Server
+  Format: DRIVER={...};SERVER=...;DATABASE=...;...
+  Components:
+    DRIVER: Must be "ODBC Driver 18 for SQL Server"
+    SERVER: Server name or localhost
+    DATABASE: Database name (ITInventoryDB)
+    Trusted_Connection: yes = Windows auth, no = SQL auth
+    TrustServerCertificate: Allow self-signed certs
+  Development: localhost;Trusted_Connection=yes
+  Production: Real servername; UID/PWD; TrustServerCertificate=no
+
+SMTP_SERVER
+  What: Email service address
+  Purpose: Send system notifications to users
+  Common Values:
+    Gmail: smtp.gmail.com
+    Outlook: smtp-mail.outlook.com
+    Office 365: smtp.office365.com
+  Development: Optional
+  Production: Required for notifications
+
+SMTP_PORT
+  What: Email service port number
+  Common Values:
+    587: TLS/STARTTLS (most common)
+    465: SSL (alternative)
+    25: SMTP (older, less secure)
+  Default: 587
+
+SMTP_USER
+  What: Email account for sending
+  Example: alerts@company.com or user@gmail.com
+  Development: Optional
+  Production: Service account email
+  Note: Must have less secure apps enabled (Gmail) or app password
+
+SMTP_PASSWORD
+  What: Password for email account
+  Security: Never hardcode in code, use .env
+  Gmail: Use app-specific password (16 chars)
+  Office: Use account password or app password
+  Development: Can be placeholder
+  Production: Must be actual password
+
+
+================================================================================
+TEMPLATE 8: How to Find Your SQL Server Name
+================================================================================
+
+WINDOWS:
+
+Method 1 - Using SQL Management Studio:
+  1. Open SQL Server Management Studio
+  2. Look at "Server name:" field in connection dialog
+  3. Format: COMPUTERNAME\INSTANCE or COMPUTERNAME
+  4. Example: MYPC\SQLEXPRESS or 192.168.1.100
+
+Method 2 - Using Command Prompt:
+  1. Open Command Prompt
+  2. Run: sqlcmd -L
+  3. Lists all SQL Server instances on network
+
+Method 3 - Using PowerShell:
+  1. Open PowerShell
+  2. Run: Get-Service | Where-Object {$_.Name -like "*SQL*"}
+  3. Shows running SQL Server services
+
+Method 4 - Registry Check:
+  1. Open Registry Editor (regedit)
+  2. Navigate to: HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Microsoft SQL Server
+  3. Look for instance names
+
+
+MACOS/LINUX:
+
+If running SQL Server in Docker:
+  host.docker.internal (for Docker Desktop)
+  Or container IP address
+
+
+================================================================================
+TEMPLATE 9: Testing Configuration
+================================================================================
+
+To verify your .env configuration is correct:
+
+Test 1 - Check File Exists:
+  Windows Command Prompt:
+    dir backend\.env
+  
+  PowerShell:
+    Test-Path backend\.env
+  
+  Mac/Linux:
+    ls -la backend/.env
+
+Test 2 - Verify Database Connection:
+  Windows Command Prompt:
+    sqlcmd -S localhost -E -d ITInventoryDB -Q "SELECT 1"
+  
+  If successful: (1 row affected)
+  If failed: Connection error
+
+Test 3 - Check Python Can Read .env:
+  cd backend
+  python -c "from dotenv import load_dotenv; import os; load_dotenv(); print('SECRET_KEY:', os.getenv('SECRET_KEY')); print('DB:', os.getenv('DATABASE_URL')[:50])"
+
+Test 4 - Start Backend and Check Logs:
+  cd backend
+  python -m uvicorn app.main:app --reload
+  
+  Look for: "Application startup complete"
+  Not error: You're good to go!
+
+
+================================================================================
+TEMPLATE 10: Common Configuration Issues & Solutions
+================================================================================
+
+ISSUE 1: "ModuleNotFoundError: No module named 'dotenv'"
+Solution:
+  pip install python-dotenv
+  Make sure virtual environment is activated
+
+ISSUE 2: ".env file not found"
+Solution:
+  1. Check file is in correct location: backend/.env
+  2. Check file is named exactly ".env" (with dot)
+  3. Restart Python application after adding .env
+
+ISSUE 3: "Database connection failed"
+Solution:
+  1. Verify SQL Server is running
+  2. Test connection: sqlcmd -S localhost -E
+  3. Check database name is correct
+  4. Verify ODBC driver is installed
+
+ISSUE 4: "ODBC Driver 18 not found"
+Solution:
+  1. Download: https://learn.microsoft.com/en-us/sql/connect/odbc/download-odbc-driver-for-sql-server
+  2. Install as Administrator
+  3. Restart application
+  4. May need to reboot computer
+
+ISSUE 5: "SMTP authentication failed"
+Solution:
+  1. Verify email/password is correct
+  2. For Gmail: Use App Password (not regular password)
+  3. Check "Less secure apps" is enabled (Gmail)
+  4. Verify SMTP_SERVER and SMTP_PORT are correct
+
+ISSUE 6: "SECRET_KEY not being used"
+Solution:
+  1. Ensure .env is in backend/ folder
+  2. Line must be exactly: SECRET_KEY=your-value
+  3. No spaces around = sign
+  4. Restart Python application
+
+ISSUE 7: ".env has special characters in password"
+Solution:
+  1. Use double quotes if password has spaces or special chars
+  2. Example: SMTP_PASSWORD="pass word with spaces"
+  3. Or use URL encoding: %40 for @, %23 for #, etc.
+
+
+================================================================================
+HOW TO CREATE .env FILE PROPERLY
+================================================================================
+
+METHOD 1 - Using Notepad (Windows):
+  1. Open Notepad
+  2. Copy template content
+  3. Paste into Notepad
+  4. File → Save As
+  5. Filename: .env
+  6. File Type: All Files (*)
+  7. Location: backend\ folder
+  8. Click Save
+
+METHOD 2 - Using Command Prompt (All Platforms):
+  cd backend
+  echo SECRET_KEY=your-secret > .env
+  echo ACCESS_TOKEN_EXPIRE_MINUTES=60 >> .env
+  echo DATABASE_URL=... >> .env
+
+METHOD 3 - Using PowerShell (Windows):
+  cd backend
+  @"
+  SECRET_KEY=your-value
+  ACCESS_TOKEN_EXPIRE_MINUTES=60
+  "@ | Set-Content -Path .env
+
+METHOD 4 - Using Text Editor (All Platforms):
+  1. Right-click in backend folder
+  2. New File → Text File
+  3. Name it: .env (with dot)
+  4. Open and paste template content
+  5. Save file
+
+METHOD 5 - VS Code:
+  1. Open VS Code
+  2. Open backend folder
+  3. Click "New File" icon
+  4. Name: .env
+  5. Paste template content
+  6. Ctrl+S to save
+
+
+================================================================================
+VERIFYING YOUR CONFIGURATION
+================================================================================
+
+After creating .env, verify it's correct:
+
+1. Check file location:
+   Should be: backend/.env
+
+2. Check file permissions:
+   Should be readable by Python
+
+3. Check file format:
+   Open with text editor
+   Each line: KEY=VALUE
+   No quotes unless needed
+   No spaces around =
+
+4. Check for hidden characters:
+   Some editors add BOM
+   Use Notepad to verify
+
+5. Common mistakes to avoid:
+   ✗ Wrong folder (root instead of backend)
+   ✗ Wrong name (.env.txt instead of .env)
+   ✗ Extra spaces (SECRET_KEY = value)
+   ✗ Unnecessary quotes around values
+   ✗ Using \\ in paths (use \\ properly)
+
+
+================================================================================
+SECURITY CHECKLIST FOR PRODUCTION
+================================================================================
+
+BEFORE DEPLOYING TO PRODUCTION:
+
+□ SECRET_KEY is changed from default
+□ SECRET_KEY is at least 32 characters
+□ SECRET_KEY is random and unique
+□ .env file is NOT committed to Git
+□ .env file has restrictive permissions (600)
+□ DATABASE_URL uses actual server name
+□ DATABASE_URL uses SQL authentication (UID/PWD)
+□ DATABASE password is strong (12+ chars)
+□ SMTP password is app-specific (not user password)
+□ ACCESS_TOKEN_EXPIRE_MINUTES is reduced to 30
+□ TrustServerCertificate=no in production DATABASE_URL
+□ Firewall allows necessary ports
+□ Regular backups are configured
+□ Error logging is configured
+□ .env file backups are in secure location
+
+
+================================================================================
+END OF ENVIRONMENT TEMPLATES
+================================================================================
+
+For more help, see:
+  - SETUP_GUIDE.txt (detailed instructions)
+  - QUICK_START.txt (quick reference)
+  - REQUIREMENTS_AND_SETUP.txt (technical details)
+
+Last Updated: March 7, 2026
