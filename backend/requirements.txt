@@ -7,3 +7,4 @@ bcrypt
 python-dotenv
 pyodbc
 Requests
+python-multipart

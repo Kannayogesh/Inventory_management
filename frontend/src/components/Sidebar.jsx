@@ -16,20 +16,20 @@ const Sidebar = () => {
           <span className="sidebar-label">Management</span>
           <Link
             to="/dashboard"
-            className={`sidebar-link${isActive("/dashboard") ? " active" : ""}`}
+            className={`sidebar-link${isActive("/dashboard") && !location.search.includes("view=analytics") ? " active" : ""}`}
           >
             <span className="link-icon">🏠</span>
             Dashboard
           </Link>
-          <a
-            href="/dashboard.html"
-            target="_blank"
-            rel="noopener noreferrer"
-            className={`sidebar-link${location.search.includes("view=analytics") ? " active" : ""}`}
+          <Link
+            to="/analytics"
+            className={`sidebar-link${isActive("/analytics") ? " active" : ""}`}
           >
             <span className="link-icon">📊</span>
             Analytics
-          </a>
+          </Link>
+
+
           <Link
             to="/assignments"
             className={`sidebar-link${isActive("/assignments") ? " active" : ""}`}
@@ -44,13 +44,19 @@ const Sidebar = () => {
             <span className="link-icon">🔍</span>
             User Search
           </Link>
-          <Link
-            to="/register"
-            className={`sidebar-link${isActive("/register") ? " active" : ""}`}
-          >
-            <span className="link-icon">👤</span>
-            Add User
-          </Link>
+          {user?.role === "Admin" && (
+            <>
+              <Link
+                to="/register"
+                className={`sidebar-link${isActive("/register") ? " active" : ""}`}
+              >
+                <span className="link-icon">👤</span>
+                Add User
+              </Link>
+            </>
+          )}
+
+
         </>
       )}
       {!isAdminOrManager && (

@@ -1,7 +1,7 @@
 import { useContext, useEffect, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { AuthContext } from "../context/AuthContext";
-import { getAssets, createAsset, updateAsset, deleteAsset, getAssignments, sendAssignmentReminder, getUsers, getCategories } from "../api";
+import { getAssets, createAsset, updateAsset, deleteAsset, getAssignments, sendAssignmentReminder, getUsers, getCategories, getMaintenanceRequests } from "../api";
 import { exportToCSV, exportToExcel, exportToPDF } from "../utils/exportUtils";
 import Navbar from "../components/Navbar";
 import Sidebar from "../components/Sidebar";
@@ -12,8 +12,8 @@ import ActionManagerModal from "../components/ActionManagerModal";
 import DeleteConfirm from "../components/DeleteConfirm";
 import AnalyticsDashboard from "../components/AnalyticsDashboard";
 
-const StatCard = ({ label, value, icon, variant = "accent", sub }) => (
-  <div className={`stat-card ${variant}`}>
+const StatCard = ({ label, value, icon, variant = "accent", sub, onClick }) => (
+  <div className={`stat-card ${variant}`} onClick={onClick} style={{ cursor: onClick ? "pointer" : "default" }}>
     <div className="stat-icon">{icon}</div>
     <div className="stat-value">{value}</div>
     <div className="stat-label">{label}</div>
@@ -30,6 +30,8 @@ const Dashboard = () => {
   const [assignments, setAssignments] = useState([]);
   const [users, setUsers] = useState([]);
   const [categories, setCategories] = useState([]);
+  const [maintenanceRequests, setMaintenanceRequests] = useState([]);
+
   const [showAssetModal, setShowAssetModal] = useState(false);
   const [editAssetData, setEditAssetData] = useState(null);
   const [transactionAsset, setTransactionAsset] = useState(null);
@@ -37,6 +39,9 @@ const Dashboard = () => {
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
   const [toasts, setToasts] = useState([]);
+
+  const [viewMode, setViewMode] = useState("all"); // 'all' or 'maintenance'
+  const [maintenanceFilter, setMaintenanceFilter] = useState("All");
 
   const addToast = (title, msg, type = "success") => {
     const id = Date.now();
@@ -66,16 +71,18 @@ const Dashboard = () => {
         }
       };
 
-      const [assetsData, assignmentsData, usersData, categoriesData] = await Promise.all([
+      const [assetsData, assignmentsData, usersData, categoriesData, maintData] = await Promise.all([
         safeFetch(getAssets, "assets"),
         safeFetch(getAssignments, "assignments"),
         safeFetch(getUsers, "users"),
-        safeFetch(getCategories, "categories")
+        safeFetch(getCategories, "categories"),
+        safeFetch(getMaintenanceRequests, "maintenance")
       ]);
 
       setAssets(assetsData);
       setUsers(usersData);
       setCategories(categoriesData);
+      setMaintenanceRequests(maintData);
 
       console.log(`Dashboard summary: ${assetsData.length} assets, ${usersData.length} users, ${assignmentsData.length} assignments`);
 
@@ -104,6 +111,13 @@ const Dashboard = () => {
       setLoading(false);
     }
   };
+
+  const location = useLocation();
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    setShowAnalytics(params.get("view") === "analytics");
+  }, [location.search]);
 
   useEffect(() => { fetchAssetsAndAssignments(); }, []);
 
@@ -175,11 +189,39 @@ const Dashboard = () => {
   const activeAssignments = assignments.filter(a => a.status === "Active");
 
   const filteredAssets = assets.filter(a => {
-    if (!search) return true;
-    const q = search.toLowerCase();
-    return `${a.asset_tag} ${a.brand} ${a.model} ${a.serial_number} ${a.location}`.toLowerCase().includes(q);
-  });
+    // 1) View Mode Filter
+    if (viewMode === "maintenance" && a.status?.toLowerCase() !== "maintenance") return false;
 
+    // 2) Maintenance Sub-Filter
+    if (viewMode === "maintenance" && maintenanceFilter !== "All") {
+      const activeReq = maintenanceRequests.find(m => m.asset_id === a.asset_id && m.status !== "Resolved" && m.status !== "Cannot Be Resolved");
+      const reqStatus = activeReq ? activeReq.status : "Resolved"; // Simplification for finding latest
+
+      // Let's refine how we find the request matching the asset
+      // Find the most recent maintenance request for this asset
+      const assetReqs = maintenanceRequests.filter(m => m.asset_id === a.asset_id);
+      let latestStatus = "Unknown";
+      if (assetReqs.length > 0) {
+        assetReqs.sort((r1, r2) => new Date(r2.reported_date) - new Date(r1.reported_date));
+        latestStatus = assetReqs[0].status;
+      }
+
+      if (maintenanceFilter === "Under Process") {
+        if (!["Open", "In Progress", "Under Process"].includes(latestStatus)) return false;
+      } else if (maintenanceFilter === "Resolved") {
+        if (latestStatus !== "Resolved") return false;
+      } else if (maintenanceFilter === "Cannot Be Resolved") {
+        if (latestStatus !== "Cannot Be Resolved") return false;
+      }
+    }
+
+    // 3) Search Query
+    if (search) {
+      const q = search.toLowerCase();
+      return `${a.asset_tag} ${a.brand} ${a.model} ${a.serial_number} ${a.location}`.toLowerCase().includes(q);
+    }
+    return true;
+  });
 
   // Dashboard View (default)
   return (
@@ -198,6 +240,11 @@ const Dashboard = () => {
               </p>
             </div>
             <div className="page-header-actions">
+              {viewMode === "maintenance" && (
+                <button className="btn btn-secondary" onClick={() => setViewMode("all")}>
+                  ← Back to All Assets
+                </button>
+              )}
               {user?.role === "Admin" && (
                 <Link to="/register" className="btn btn-secondary">
                   👤 Add User
@@ -213,16 +260,40 @@ const Dashboard = () => {
           <div className="stats-grid">
             <StatCard label="Total Users" value={users.length} icon="👥" variant="info" />
             <StatCard label="Total Assets" value={total} icon="📦" variant="accent" />
-            <StatCard label="Available" value={available} icon="✅" variant="success" />
-            <StatCard label="Assigned" value={assigned} icon="👤" variant="info" />
-            <StatCard label="Maintenance" value={maintenance} icon="🔧" variant="warning" />
+            <StatCard label="Available" value={available} icon="✅" variant="success" onClick={() => setViewMode("all")} />
+            <StatCard label="Assigned" value={assigned} icon="👤" variant="info" onClick={() => setViewMode("all")} />
+            <StatCard
+              label="Maintenance"
+              value={maintenance}
+              icon="🔧"
+              variant="warning"
+              onClick={() => {
+                setViewMode(viewMode === "maintenance" ? "all" : "maintenance");
+                setMaintenanceFilter("All");
+              }}
+            />
           </div>
 
           {/* Assets Table */}
           <div className="section">
             <div className="section-header">
-              <h3 className="section-title">Assets Library</h3>
+              <h3 className="section-title">
+                {viewMode === "maintenance" ? "Maintenance Assets" : "Assets Library"}
+              </h3>
               <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
+                {viewMode === "maintenance" && (
+                  <select
+                    className="form-input"
+                    value={maintenanceFilter}
+                    onChange={e => setMaintenanceFilter(e.target.value)}
+                    style={{ width: "auto" }}
+                  >
+                    <option value="All">All Statuses</option>
+                    <option value="Under Process">Under Process</option>
+                    <option value="Resolved">Resolved</option>
+                    <option value="Cannot Be Resolved">Cannot Be Resolved</option>
+                  </select>
+                )}
                 <div className="search-input">
                   <span className="search-icon">🔍</span>
                   <input
@@ -241,16 +312,10 @@ const Dashboard = () => {
                   <button className="btn btn-sm" style={{ background: "var(--danger-light)", color: "var(--danger)", border: "none" }} onClick={() => exportToPDF(getExportData(), "assets.pdf")}>
                     📋 PDF
                   </button>
-                  <button
-                    onClick={() => setShowAnalytics(v => !v)}
-                    className="btn btn-secondary btn-sm"
-                    style={{ minWidth: "110px" }}
-                  >
-                    {showAnalytics ? "📊 Hide Analytics" : "📊 Analytics"}
-                  </button>
                 </div>
               </div>
             </div>
+
 
             {loading ? (
               <div style={{ textAlign: "center", padding: "48px", color: "var(--text-muted)" }}>
@@ -264,6 +329,8 @@ const Dashboard = () => {
                 onEdit={setEditAssetData}
                 onDelete={setDeleteId}
                 onTransaction={setTransactionAsset}
+                viewMode={viewMode}
+                maintenanceRequests={maintenanceRequests}
               />
             )}
           </div>
@@ -334,111 +401,19 @@ const Dashboard = () => {
             </div>
           </div>
 
-          {/* Inline Analytics Section (toggled) */}
-          {showAnalytics && (
-            <div className="section" style={{ animation: "fadeSlideIn 0.3s ease both" }}>
-              <div className="section-header">
-                <div>
-                  <h3 className="section-title">📊 Analytics Dashboard</h3>
-                  <p style={{ fontSize: "13px", color: "var(--text-muted)", marginTop: "2px" }}>Asset and inventory analytics</p>
-                </div>
-                <div style={{ display: "flex", gap: "8px" }}>
-                  <div className="stats-grid" style={{ marginBottom: 0, display: "grid", gridTemplateColumns: "repeat(4, auto)", gap: "10px" }}>
-                    <StatCard label="Users" value={users.length} icon="👥" variant="info" />
-                    <StatCard label="Categories" value={categories.length} icon="📂" variant="success" />
-                    <StatCard label="Active" value={activeAssignments.length} icon="📋" variant="warning" />
-                    <StatCard label="Retired" value={retired} icon="🗃️" variant="danger" />
-                  </div>
-                </div>
-              </div>
-
-              {loading ? (
-                <div style={{ textAlign: "center", padding: "48px", color: "var(--text-muted)" }}>
-                  <span className="spinner" style={{ width: 28, height: 28, borderWidth: 3 }} />
-                </div>
-              ) : (
-                <>
-                  <AnalyticsDashboard
-                    assets={assets}
-                    assignments={assignments}
-                    users={users}
-                    categories={categories}
-                  />
-
-                  {/* Full Asset Library inside Analytics */}
-                  <div style={{ marginTop: "1.5rem" }}>
-                    <div className="section-header">
-                      <h3 className="section-title">Asset Library (All Assets)</h3>
-                      <div style={{ display: "flex", gap: "8px" }}>
-                        <button className="btn btn-sm" style={{ background: "var(--info-light)", color: "var(--info)", border: "none" }} onClick={() => exportToCSV(getExportData(), "assets.csv")}>📄 CSV</button>
-                        <button className="btn btn-sm" style={{ background: "var(--success-light)", color: "var(--success)", border: "none" }} onClick={() => exportToExcel(getExportData(), "assets.xlsx")}>📊 Excel</button>
-                        <button className="btn btn-sm" style={{ background: "var(--danger-light)", color: "var(--danger)", border: "none" }} onClick={() => exportToPDF(getExportData(), "assets.pdf")}>📋 PDF</button>
-                      </div>
-                    </div>
-                    <div className="table-container">
-                      <div style={{ overflowX: "auto" }}>
-                        <table>
-                          <thead>
-                            <tr>
-                              <th>Asset Tag</th>
-                              <th>Brand / Model</th>
-                              <th>Serial Number</th>
-                              <th>Category</th>
-                              <th>Assigned To</th>
-                              <th>Location</th>
-                              <th>Status</th>
-                              <th>Condition</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {assets.map(a => {
-                              const assignedUser = getAssignedUser(a.asset_id);
-                              const category = categories.find(c => c.category_id === a.category_id);
-                              return (
-                                <tr key={a.asset_id}>
-                                  <td className="td-bold">{a.asset_tag || "—"}</td>
-                                  <td className="td-muted">{a.brand || "—"} {a.model || "—"}</td>
-                                  <td className="td-muted" style={{ fontSize: "12px" }}>{a.serial_number || "—"}</td>
-                                  <td className="td-muted">{category?.category_name || "—"}</td>
-                                  <td className="td-bold">{assignedUser?.full_name || "Unassigned"}</td>
-                                  <td className="td-muted">{a.location || "—"}</td>
-                                  <td><span className={`badge badge-${a.status?.toLowerCase() === "available" ? "success" : "info"}`}>{a.status || "—"}</span></td>
-                                  <td className="td-muted">{a.condition_status || "—"}</td>
-                                </tr>
-                              );
-                            })}
-                            {assets.length === 0 && (
-                              <tr><td colSpan="8"><div className="empty-state"><div className="empty-icon">📦</div><p>No assets found</p></div></td></tr>
-                            )}
-                          </tbody>
-                        </table>
-                      </div>
-                    </div>
-                  </div>
-                </>
-              )}
-            </div>
-          )}
-
-          {/* Category & User Asset Breakdown */}
-          <div className="section">
+          {/* Category by Asset and User Section */}
+          <div className="section" style={{ marginTop: "2rem" }}>
             <div className="section-header">
-              <h3 className="section-title">Assets by Category & User</h3>
-              <span className="badge badge-accent">{categories.length} categories</span>
+              <h3 className="section-title">Category by Asset and User</h3>
             </div>
-
-            {loading ? (
-              <div style={{ textAlign: "center", padding: "48px", color: "var(--text-muted)" }}>
-                <span className="spinner" style={{ width: 28, height: 28, borderWidth: 3 }} />
-              </div>
-            ) : (
+            <div className="table-container" style={{ padding: "20px" }}>
               <CategoryAssetView
                 assets={assets}
                 assignments={assignments}
                 users={users}
                 categories={categories}
               />
-            )}
+            </div>
           </div>
         </main>
       </div>
@@ -451,7 +426,12 @@ const Dashboard = () => {
         <AssetModal close={() => setEditAssetData(null)} onSave={handleSaveAsset} asset={editAssetData} />
       )}
       {transactionAsset && (
-        <ActionManagerModal asset={transactionAsset} close={() => setTransactionAsset(null)} onRefresh={fetchAssetsAndAssignments} />
+        <ActionManagerModal
+          asset={transactionAsset}
+          close={() => setTransactionAsset(null)}
+          onRefresh={fetchAssetsAndAssignments}
+          maintenanceRequests={maintenanceRequests}
+        />
       )}
       {deleteId && (
         <DeleteConfirm onConfirm={confirmDelete} onCancel={() => setDeleteId(null)} />

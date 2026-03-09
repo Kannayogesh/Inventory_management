@@ -24,12 +24,15 @@ def get_category_count():
     conn.close()
     return row.count if row else 0
 
-def create_category(category_name: str, description: str = None):
+def create_category(category_name: str, description: str = None) -> int:
     conn = get_db_connection()
     cursor = conn.cursor()
     cursor.execute(
-        "INSERT INTO Asset_Categories (category_name, description) VALUES (?, ?)",
+        "INSERT INTO Asset_Categories (category_name, description) OUTPUT INSERTED.category_id VALUES (?, ?)",
         (category_name, description)
     )
+    new_id = cursor.fetchone()[0]
     conn.commit()
     conn.close()
+    return new_id
+

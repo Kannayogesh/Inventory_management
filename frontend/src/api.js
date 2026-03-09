@@ -17,10 +17,16 @@ export const apiFetch = async (endpoint, options = {}) => {
         ...options.headers,
     };
 
+    // If body is FormData, let the browser set the boundary and content-type
+    if (options.body instanceof FormData) {
+        delete headers["Content-Type"];
+    }
+
     if (token) {
         headers["Authorization"] = `Bearer ${token}`;
     }
 
+    // ... rest of the function remains same
     try {
         const response = await fetch(`${API_BASE_URL}${endpoint}`, {
             ...options,
@@ -51,7 +57,6 @@ export const apiFetch = async (endpoint, options = {}) => {
         return data;
     } catch (fetchError) {
         if (fetchError.message === "Unauthorized: Invalid or expired token" || fetchError.message === "Token is invalid or expired") {
-            // Redundant check just in case
             localStorage.removeItem("token");
             localStorage.removeItem("user");
             window.location.href = "/";
@@ -80,15 +85,28 @@ export const createCategory = (categoryData) => apiFetch("/categories/", { metho
 export const getAssets = () => apiFetch("/assets/");
 export const getAsset = (id) => apiFetch(`/assets/${id}`);
 export const createAsset = (assetData) => {
-    // Remove file object from payload as it cannot be JSON serialized
-    // The invoice_path field contains just the filename or path string
     const { _invoiceFile, ...cleanData } = assetData;
-    return apiFetch("/assets/", { method: "POST", body: JSON.stringify(cleanData) });
+    if (_invoiceFile) {
+        const formData = new FormData();
+        formData.append("asset_json", JSON.stringify(cleanData));
+        formData.append("invoice", _invoiceFile);
+        return apiFetch("/assets/", { method: "POST", body: formData });
+    }
+    const formData = new FormData();
+    formData.append("asset_json", JSON.stringify(cleanData));
+    return apiFetch("/assets/", { method: "POST", body: formData });
 };
 export const updateAsset = (id, assetData) => {
-    // Remove file object from payload as it cannot be JSON serialized
     const { _invoiceFile, ...cleanData } = assetData;
-    return apiFetch(`/assets/${id}`, { method: "PUT", body: JSON.stringify(cleanData) });
+    if (_invoiceFile) {
+        const formData = new FormData();
+        formData.append("asset_json", JSON.stringify(cleanData));
+        formData.append("invoice", _invoiceFile);
+        return apiFetch(`/assets/${id}`, { method: "PUT", body: formData });
+    }
+    const formData = new FormData();
+    formData.append("asset_json", JSON.stringify(cleanData));
+    return apiFetch(`/assets/${id}`, { method: "PUT", body: formData });
 };
 export const deleteAsset = (id) => apiFetch(`/assets/${id}`, { method: "DELETE" });
 
@@ -108,3 +126,5 @@ export const updateMaintenanceRequest = (id, data) => apiFetch(`/maintenance/${i
 export const getProcurementRequests = () => apiFetch("/procurement/");
 export const createProcurementRequest = (data) => apiFetch("/procurement/", { method: "POST", body: JSON.stringify(data) });
 export const updateProcurementRequest = (id, data) => apiFetch(`/procurement/${id}`, { method: "PUT", body: JSON.stringify(data) });
+
+export const getAssetHistory = (assetId) => apiFetch(`/maintenance/history/asset/${assetId}`);

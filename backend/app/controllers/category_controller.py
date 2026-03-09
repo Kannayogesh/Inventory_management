@@ -13,7 +13,8 @@ def get_categories(current_user: dict = Depends(get_current_user)):
 @router.post("/", response_model=CategoryResponse)
 def create_category(request: CategoryBase, current_user: dict = Depends(get_current_user)):
     """Create a new asset category (Admin/Asset Manager only)"""
-    if current_user.get("role") not in ["Admin", "Asset Manager"]:
+    if current_user.get("role") != "Admin":
+
         from fastapi import HTTPException, status
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,

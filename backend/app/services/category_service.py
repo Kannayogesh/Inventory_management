@@ -7,13 +7,19 @@ def create_category(category_name: str, description: str = None):
     """Create a new asset category"""
     # Check if category already exists
     categories = category_repository.get_all_categories()
-    if any(cat["category_name"].lower() == category_name.lower() for cat in categories):
-        # Return the existing category
-        return next(cat for cat in categories if cat["category_name"].lower() == category_name.lower())
+    for cat in categories:
+        if cat["category_name"].lower() == category_name.lower():
+            return cat
     
     # Create new category
-    category_repository.create_category(category_name, description)
+    new_id = category_repository.create_category(category_name, description)
+    
     # Return the newly created category
     categories = category_repository.get_all_categories()
-    return next(cat for cat in categories if cat["category_name"] == category_name)
+    for cat in categories:
+        if cat["category_id"] == new_id:
+            return cat
+    
+    return {"category_id": new_id, "category_name": category_name, "description": description}
+
 

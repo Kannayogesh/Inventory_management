@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, BackgroundTasks
 from typing import List
 
-from app.schemas.maintenance_schema import MaintenanceCreate, MaintenanceUpdate, MaintenanceResponse
+from app.schemas.maintenance_schema import MaintenanceCreate, MaintenanceUpdate, MaintenanceResponse, MaintenanceHistoryResponse
 from app.services import maintenance_service
 from app.middleware.role_middleware import get_current_user, require_role
 
@@ -30,4 +30,8 @@ def update_request(
     background_tasks: BackgroundTasks,
     current_user: dict = Depends(require_role(["Admin", "Asset Manager"]))
 ):
-    return maintenance_service.update_request(maintenance_id, request_data, background_tasks)
+    return maintenance_service.update_request(maintenance_id, request_data, background_tasks, current_user)
+
+@router.get("/history/asset/{asset_id}", response_model=List[MaintenanceHistoryResponse])
+def get_asset_history(asset_id: int, current_user: dict = Depends(get_current_user)):
+    return maintenance_service.get_history(asset_id)

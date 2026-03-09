@@ -1,12 +1,15 @@
-import { useState, useEffect } from "react";
-import { getCategories, createCategory } from "../api";
+import { useState, useEffect, useContext } from "react";
+import { getCategories, createCategory, getAssetHistory } from "../api";
+import { AuthContext } from "../context/AuthContext";
 
 const AssetModal = ({ close, onSave, asset }) => {
+  const { user } = useContext(AuthContext);
   const [categories, setCategories] = useState([]);
   const [categoryInput, setCategoryInput] = useState("");
   const [showCategoryDropdown, setShowCategoryDropdown] = useState(false);
   const [invoiceFile, setInvoiceFile] = useState(null);
   const [invoicePreview, setInvoicePreview] = useState("");
+  const [history, setHistory] = useState([]);
   const [formData, setFormData] = useState({
     asset_tag: "",
     category_id: "",
@@ -35,7 +38,13 @@ const AssetModal = ({ close, onSave, asset }) => {
         }
       })
       .catch(console.error);
-  }, []);
+
+    if (asset) {
+      getAssetHistory(asset.asset_id)
+        .then(setHistory)
+        .catch(console.error);
+    }
+  }, [asset]);
 
   useEffect(() => {
     if (asset) {
@@ -100,7 +109,7 @@ const AssetModal = ({ close, onSave, asset }) => {
 
   const handleCreateCategory = async () => {
     if (!categoryInput.trim()) return;
-    
+
     try {
       const newCategory = await createCategory({ category_name: categoryInput });
       setCategories([...categories, newCategory]);
@@ -118,20 +127,34 @@ const AssetModal = ({ close, onSave, asset }) => {
 
   const selectedCategory = categories.find(c => c.category_id == formData.category_id);
 
+  const [activeTab, setActiveTab] = useState("details");
+
   const handleSubmit = (e) => {
     e.preventDefault();
-    
+
     // Validate required fields
     if (!formData.asset_tag || !formData.asset_tag.trim()) {
       alert("Asset Tag is required");
       return;
     }
-    
-    if (!formData.category_id) {
+
+    let finalCategoryId = formData.category_id;
+    // Auto-resolve or validate category from user input
+    if (categoryInput) {
+      const matchedCategory = categories.find(c => c.category_name.toLowerCase() === categoryInput.trim().toLowerCase());
+      if (matchedCategory) {
+        finalCategoryId = matchedCategory.category_id;
+      } else {
+        alert("Please select an existing category or create a new one using the dropdown.");
+        return;
+      }
+    }
+
+    if (!finalCategoryId) {
       alert("Please select or create a category");
       return;
     }
-    
+
     const payload = {
       ...formData,
       serial_number: formData.serial_number === "" ? null : formData.serial_number,
@@ -143,16 +166,16 @@ const AssetModal = ({ close, onSave, asset }) => {
       location: formData.location === "" ? null : formData.location,
       purchase_cost: formData.purchase_cost || 0,
       depreciation_years: formData.depreciation_years || 0,
-      category_id: parseInt(formData.category_id),
+      category_id: parseInt(finalCategoryId),
       invoice_path: formData.invoice_path === "" ? null : formData.invoice_path,
     };
-    
+
     // If there's an invoice file, we would need to handle file upload here
     // For now, we'll pass the file data along with the form
     if (invoiceFile) {
       payload._invoiceFile = invoiceFile;
     }
-    
+
     onSave(payload);
   };
 
@@ -165,7 +188,79 @@ const AssetModal = ({ close, onSave, asset }) => {
         </div>
         <p className="modal-subtitle">{asset ? "Update the asset information below." : "Fill in the details to register a new asset."}</p>
 
-        <form onSubmit={handleSubmit}>
+        {asset && (
+          <div style={{ display: "flex", gap: "10px", marginTop: "15px", borderBottom: "1px solid var(--border)", paddingBottom: "10px", padding: "0 20px" }}>
+            <button type="button" className={`btn btn-sm ${activeTab === "details" ? "btn-primary" : "btn-secondary"}`} onClick={() => setActiveTab("details")} style={{ border: activeTab === "details" ? "none" : "" }}>
+              Details
+            </button>
+            <button type="button" className={`btn btn-sm ${activeTab === "history" ? "btn-primary" : "btn-secondary"}`} onClick={() => setActiveTab("history")} style={{ border: activeTab === "history" ? "none" : "" }}>
+              Maintenance History
+            </button>
+          </div>
+        )}
+
+        <div style={{ display: activeTab === "history" ? "block" : "none", padding: "20px" }}>
+          {history.length === 0 ? (
+            <div className="empty-state">
+              <div className="empty-icon">📭</div>
+              <p>No maintenance history recorded.</p>
+            </div>
+          ) : (
+            <div className="timeline-container" style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+              {history.map((record, index) => (
+                <div key={record.history_id || index} style={{
+                  display: "flex",
+                  gap: "16px",
+                  position: "relative"
+                }}>
+                  <div style={{
+                    display: "flex",
+                    flexDirection: "column",
+                    alignItems: "center"
+                  }}>
+                    <div style={{
+                      width: "12px",
+                      height: "12px",
+                      borderRadius: "50%",
+                      backgroundColor: "var(--accent)",
+                      zIndex: 1
+                    }}></div>
+                    {index !== history.length - 1 && (
+                      <div style={{
+                        width: "2px",
+                        backgroundColor: "var(--border-strong)",
+                        flexGrow: 1,
+                        margin: "4px 0"
+                      }}></div>
+                    )}
+                  </div>
+                  <div style={{
+                    paddingBottom: index === history.length - 1 ? "0" : "16px",
+                    flexGrow: 1
+                  }}>
+                    <div style={{ fontWeight: "600", fontSize: "14px" }}>{record.status}</div>
+                    <div style={{ fontSize: "12px", color: "var(--text-muted)", marginTop: "4px" }}>
+                      By: {record.action_by_name} • {new Date(record.action_date).toLocaleString()}
+                    </div>
+                    {record.notes && (
+                      <div style={{
+                        marginTop: "8px",
+                        padding: "8px 12px",
+                        backgroundColor: "var(--bg-subtle)",
+                        borderRadius: "8px",
+                        fontSize: "13px"
+                      }}>
+                        {record.notes}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        <form onSubmit={handleSubmit} style={{ display: activeTab === "details" ? "block" : "none" }}>
           <div className="modal-body">
             <div className="form-row">
               <div className="form-group">
@@ -225,7 +320,7 @@ const AssetModal = ({ close, onSave, asset }) => {
                           <div style={{ borderTop: "1px solid var(--border-strong)" }} />
                         </>
                       )}
-                      {categoryInput.trim() && !categories.some(c => c.category_name.toLowerCase() === categoryInput.toLowerCase()) && (
+                      {user?.role === "Admin" && categoryInput.trim() && !categories.some(c => c.category_name.toLowerCase() === categoryInput.toLowerCase()) && (
                         <div
                           onClick={handleCreateCategory}
                           style={{
@@ -239,6 +334,7 @@ const AssetModal = ({ close, onSave, asset }) => {
                           + Create "{categoryInput}"
                         </div>
                       )}
+
                     </div>
                   )}
                 </div>

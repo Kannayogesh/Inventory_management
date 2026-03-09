@@ -1,13 +1,23 @@
-import { useState } from "react";
-import { createAssignment, createMaintenanceRequest } from "../api";
+import { useState, useContext, useEffect } from "react";
+import { createAssignment, createMaintenanceRequest, updateMaintenanceRequest } from "../api";
+import { AuthContext } from "../context/AuthContext";
 
-const ActionManagerModal = ({ asset, close, onRefresh }) => {
-  const [action, setAction] = useState("assign");
+const ActionManagerModal = ({ asset, close, onRefresh, maintenanceRequests = [] }) => {
+  const { user } = useContext(AuthContext);
+  const [action, setAction] = useState(asset.status === "Maintenance" ? "update_maintenance" : "assign");
   const [employeeCode, setEmployeeCode] = useState("");
   const [expectedReturnDate, setExpectedReturnDate] = useState("");
   const [condition, setCondition] = useState(asset.condition_status || "Good");
   const [issue, setIssue] = useState("");
   const [loading, setLoading] = useState(false);
+
+  // New states for updating maintenance
+  const [maintStatus, setMaintStatus] = useState("Under Process");
+  const [maintNotes, setMaintNotes] = useState("");
+
+  const activeRequest = maintenanceRequests.find(
+    m => m.asset_id === asset.asset_id && m.status !== "Resolved" && m.status !== "Cannot Be Resolved"
+  );
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -27,10 +37,19 @@ const ActionManagerModal = ({ asset, close, onRefresh }) => {
           issue_description: issue,
           remarks: "Logged by Admin",
         });
+      } else if (action === "update_maintenance") {
+        if (!activeRequest) throw new Error("Could not find active maintenance request for this asset.");
+        await updateMaintenanceRequest(activeRequest.maintenance_id, {
+          status: maintStatus,
+          notes: maintNotes || "Updated via dashboard"
+        });
       }
+
       const successMsg = action === "assign"
         ? `Asset assigned to ${employeeCode}. Email notification sent.`
-        : "Maintenance request logged successfully.";
+        : action === "maintenance"
+          ? "Maintenance request logged successfully."
+          : `Maintenance status updated to ${maintStatus}.`;
       onRefresh(successMsg);
       close();
     } catch (error) {
@@ -58,14 +77,22 @@ const ActionManagerModal = ({ asset, close, onRefresh }) => {
             <div className="form-group">
               <label className="form-label">Action</label>
               <div className="radio-group">
-                <label className={`radio-option${action === "assign" ? " selected" : ""}`}>
-                  <input type="radio" value="assign" checked={action === "assign"} onChange={() => setAction("assign")} disabled={asset.status !== "Available"} />
-                  📤 Assign to Employee
+                <label className={`radio-option${action === "assign" ? " selected" : ""}${user?.role !== "Admin" ? " disabled" : ""}`}>
+                  <input type="radio" value="assign" checked={action === "assign"} onChange={() => setAction("assign")} disabled={asset.status !== "Available" || user?.role !== "Admin"} />
+                  📤 Assign to Employee {user?.role !== "Admin" && "(Admin Only)"}
                 </label>
-                <label className={`radio-option${action === "maintenance" ? " selected" : ""}`}>
-                  <input type="radio" value="maintenance" checked={action === "maintenance"} onChange={() => setAction("maintenance")} disabled={asset.status === "Maintenance"} />
-                  🔧 Send to Maintenance
-                </label>
+
+                {asset.status !== "Maintenance" ? (
+                  <label className={`radio-option${action === "maintenance" ? " selected" : ""}`}>
+                    <input type="radio" value="maintenance" checked={action === "maintenance"} onChange={() => setAction("maintenance")} />
+                    🔧 Send to Maintenance
+                  </label>
+                ) : (
+                  <label className={`radio-option${action === "update_maintenance" ? " selected" : ""}`}>
+                    <input type="radio" value="update_maintenance" checked={action === "update_maintenance"} onChange={() => setAction("update_maintenance")} />
+                    🔄 Update Maintenance Status
+                  </label>
+                )}
               </div>
             </div>
 
@@ -109,6 +136,28 @@ const ActionManagerModal = ({ asset, close, onRefresh }) => {
                   required
                 />
               </div>
+            )}
+
+            {action === "update_maintenance" && (
+              <>
+                <div className="form-group">
+                  <label className="form-label">Update Status To</label>
+                  <select className="form-select" value={maintStatus} onChange={e => setMaintStatus(e.target.value)}>
+                    <option value="Under Process">Under Process</option>
+                    <option value="Resolved">Resolved</option>
+                    <option value="Cannot Be Resolved">Cannot Be Resolved</option>
+                  </select>
+                </div>
+                <div className="form-group">
+                  <label className="form-label">Remarks / Notes</label>
+                  <textarea
+                    className="form-textarea"
+                    placeholder="Add details about the status update..."
+                    value={maintNotes}
+                    onChange={e => setMaintNotes(e.target.value)}
+                  />
+                </div>
+              </>
             )}
           </div>
 

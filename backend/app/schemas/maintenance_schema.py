@@ -12,7 +12,7 @@ class MaintenanceCreate(MaintenanceBase):
 
 class MaintenanceUpdate(BaseModel):
     issue_description: Optional[str] = Field(None, max_length=1000)
-    status: Optional[str] = Field(None, pattern="^(Open|In Progress|Resolved)$")
+    status: Optional[str] = Field(None, pattern="^(Open|In Progress|Under Process|Resolved|Cannot Be Resolved)$")
     remarks: Optional[str] = Field(None, max_length=500)
     resolved_date: Optional[datetime] = None
 
@@ -22,3 +22,12 @@ class MaintenanceResponse(MaintenanceBase):
     status: str
     reported_date: datetime
     resolved_date: Optional[datetime] = None
+
+class MaintenanceHistoryResponse(BaseModel):
+    history_id: int
+    maintenance_id: int
+    status: str
+    notes: Optional[str] = None
+    action_date: datetime
+    performed_by_name: str
+    issue_description: Optional[str] = None

@@ -21,6 +21,10 @@ def create_assignment(assignment_data: AssignmentCreate, current_user: dict, bac
     if not target_user:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User with this Employee ID not found")
         
+    # Verify the target user is an Employee (Admin and AM asset assignment is not needed)
+    if target_user["role"] != "Employee":
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Assets can only be assigned to users with the 'Employee' role.")
+        
     # Verify the asset is available
     asset = asset_repository.get_asset_by_id(assignment_data.asset_id)
     if not asset or asset["status"] != "Available":
@@ -150,9 +154,9 @@ def send_confirmation_reminder(assignment_id: int, background_tasks: BackgroundT
 def return_assignment(assignment_id: int, return_data: ReturnRequest, current_user: dict, background_tasks: BackgroundTasks):
     assignment = get_assignment(assignment_id)
     
-    # Permission check: Employees can only return their own assignments. Admin/Asset Managers can return any.
-    if current_user.get("role") == "Employee" and assignment["user_id"] != current_user.get("user_id"):
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="You can only return your own assigned assets.")
+    # Permission check: Only Admin/Asset Managers can return any assignments.
+    if current_user.get("role") not in ["Admin", "Asset Manager"]:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Only Admins or Asset Managers can process asset returns.")
     
     if assignment["status"] == "Completed" or assignment.get("returned_date"):
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Asset is already returned.")

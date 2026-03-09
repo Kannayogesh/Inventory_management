@@ -3,7 +3,7 @@ from fastapi import APIRouter, HTTPException, Depends, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from app.schemas.auth_schema import RegisterRequest, LoginRequest, UpdateUserRequest
 from app.services.auth_service import register_user, login_user
-from app.repositories.user_repository import get_user_count, get_all_users, get_user_by_id, search_users, update_user
+from app.repositories.user_repository import get_user_count, get_all_users, get_user_by_id, search_users, update_user, delete_user
 from app.middleware.role_middleware import get_current_user
 from typing import List
 
@@ -103,3 +103,20 @@ def update_user_endpoint(
     # Return updated user
     return get_user_by_id(user_id)
 
+@router.delete("/users/{user_id}")
+def delete_user_endpoint(user_id: int, current_user: dict = Depends(get_current_user)):
+    """Delete a user (Admin only)"""
+    if current_user.get("role") != "Admin":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Forbidden: Only Admins can delete users"
+        )
+    
+    success = delete_user(user_id)
+    if not success:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Failed to delete user. User might have existing assignments or maintenance records."
+        )
+    
+    return {"message": "User deleted successfully"}

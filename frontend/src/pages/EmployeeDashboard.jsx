@@ -140,15 +140,9 @@ const EmployeeDashboard = () => {
                           <td className="td-muted">{a.expected_return_date || "—"}</td>
                           <td>{statusBadge(a.status)}</td>
                           <td>
-                            {a.status === "Active" && (
-                              <button
-                                className="btn btn-danger btn-sm"
-                                onClick={() => setSelectedAssignment(a)}
-                              >
-                                Return
-                              </button>
-                            )}
+                            <span className="td-muted">Managed by Admin</span>
                           </td>
+
                         </tr>
                       ))}
                       {assignments.length === 0 && (

@@ -302,7 +302,7 @@ const Assignments = () => {
                             </span>
                           </td>
                           <td style={{ padding: "12px", textAlign: "center" }}>
-                            {(user?.role === "Admin" || user?.role === "Asset Manager" || assignment.user_id === user?.user_id) && (
+                            {(user?.role === "Admin" || user?.role === "Asset Manager") && (
                               <button
                                 className="btn btn-sm"
                                 style={{
@@ -319,6 +319,7 @@ const Assignments = () => {
                               </button>
                             )}
                           </td>
+
                         </tr>
                       );
                     })}

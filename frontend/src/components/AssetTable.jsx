@@ -16,11 +16,28 @@ const conditionBadge = (condition) => {
   return <span className="badge badge-muted">{condition || "-"}</span>;
 };
 
-const AssetTable = ({ assets, onEdit, onDelete, onTransaction, assignments = [], users = [] }) => {
+const maintStatusBadge = (status) => {
+  const s = (status || "").toLowerCase();
+  if (s === "resolved") return <span className="badge badge-success">{status}</span>;
+  if (s === "cannot be resolved") return <span className="badge badge-danger">{status}</span>;
+  if (s.includes("process") || s.includes("progress")) return <span className="badge badge-warning">{status}</span>;
+  return <span className="badge badge-info">{status || "Open"}</span>;
+};
+
+const AssetTable = ({ assets, onEdit, onDelete, onTransaction, assignments = [], users = [], viewMode = "all", maintenanceRequests = [] }) => {
   const getAssignedUser = (assetId) => {
     const assignment = assignments.find(a => a.asset_id === assetId && a.status === "Active");
     return assignment ? users.find(u => u.user_id === assignment.user_id) : null;
   };
+
+  const getMaintenanceDetails = (assetId) => {
+    const reqs = maintenanceRequests.filter(m => m.asset_id === assetId);
+    if (reqs.length === 0) return null;
+    reqs.sort((r1, r2) => new Date(r2.reported_date) - new Date(r1.reported_date));
+    return reqs[0];
+  };
+
+  const isMaint = viewMode === "maintenance";
 
   return (
     <div className="table-container">
@@ -28,40 +45,100 @@ const AssetTable = ({ assets, onEdit, onDelete, onTransaction, assignments = [],
         <table>
           <thead>
             <tr>
-              <th>Brand / Model</th>
+              <th>{isMaint ? "Asset ID / Model" : "Brand / Model"}</th>
               <th>Serial No</th>
               <th>Assigned To</th>
-              <th>Status</th>
-              <th>Condition</th>
-              <th>Location</th>
+              {isMaint ? (
+                <>
+                  <th>Location</th>
+                  <th>Issue Description</th>
+                  <th>Maint. Status</th>
+                  <th>Last Updated</th>
+                </>
+              ) : (
+                <>
+                  <th>Status</th>
+                  <th>Condition</th>
+                  <th>Location</th>
+                </>
+              )}
               <th>Actions</th>
             </tr>
           </thead>
           <tbody>
             {assets.map((asset) => {
               const assignedUser = getAssignedUser(asset.asset_id);
+              const maintDetails = isMaint ? getMaintenanceDetails(asset.asset_id) : null;
+
               return (
                 <tr key={asset.asset_id}>
                   <td>
-                    <span className="td-bold">{asset.brand}</span>
-                    {asset.model && (
-                      <span className="td-muted"> {asset.model}</span>
+                    {isMaint ? (
+                      <div>
+                        <span className="td-bold">ID: {asset.asset_id}</span>
+                        <br />
+                        <span className="td-muted">{asset.brand} {asset.model}</span>
+                      </div>
+                    ) : (
+                      <>
+                        <span className="td-bold">{asset.brand}</span>
+                        {asset.model && (
+                          <span className="td-muted"> {asset.model}</span>
+                        )}
+                      </>
                     )}
                   </td>
                   <td className="td-muted">{asset.serial_number || "—"}</td>
                   <td className="td-bold">{assignedUser?.full_name || "Unassigned"}</td>
-                  <td>{statusBadge(asset.status)}</td>
-                  <td>{conditionBadge(asset.condition_status)}</td>
-                  <td className="td-muted">{asset.location || "—"}</td>
+
+                  {isMaint ? (
+                    <>
+                      <td className="td-muted">{asset.location || "—"}</td>
+                      <td style={{ maxWidth: '200px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} title={maintDetails?.issue_description || "—"}>
+                        {maintDetails?.issue_description || "—"}
+                      </td>
+                      <td>{maintDetails ? maintStatusBadge(maintDetails.status) : "—"}</td>
+                      <td className="td-muted">
+                        {maintDetails ? new Date(maintDetails.resolved_date || maintDetails.reported_date).toLocaleDateString() : "—"}
+                      </td>
+                    </>
+                  ) : (
+                    <>
+                      <td>{statusBadge(asset.status)}</td>
+                      <td>{conditionBadge(asset.condition_status)}</td>
+                      <td className="td-muted">{asset.location || "—"}</td>
+                    </>
+                  )}
+
                   <td>
                     <div className="action-btn-group">
-                      <button
-                        className="btn btn-ghost btn-sm btn-icon"
-                        onClick={() => onEdit(asset)}
-                        title="Edit asset"
-                      >
-                        ✏️
-                      </button>
+                      {asset.invoice_path && !isMaint && (
+                        <a
+                          href={
+                            asset.invoice_path.startsWith('http')
+                              ? asset.invoice_path
+                              : `http://127.0.0.1:8000/uploads/${asset.invoice_path.replace(/^(\/)?uploads[\/\\]/, '').replace(/^\//, '')}`
+                          }
+                          target="_blank"
+                          rel="noreferrer"
+                          className="btn btn-ghost btn-sm btn-icon"
+                          title="View Invoice"
+                          style={{ fontSize: "14px" }}
+                        >
+                          📄
+                        </a>
+                      )}
+
+                      {!isMaint && (
+                        <button
+                          className="btn btn-ghost btn-sm btn-icon"
+                          onClick={() => onEdit(asset)}
+                          title="Edit asset"
+                        >
+                          ✏️
+                        </button>
+                      )}
+
                       <button
                         className="btn btn-ghost btn-sm btn-icon"
                         onClick={() => onTransaction(asset)}
@@ -70,13 +147,16 @@ const AssetTable = ({ assets, onEdit, onDelete, onTransaction, assignments = [],
                       >
                         ⚙️
                       </button>
-                      <button
-                        className="btn btn-danger btn-sm btn-icon"
-                        onClick={() => onDelete(asset.asset_id)}
-                        title="Delete asset"
-                      >
-                        🗑️
-                      </button>
+
+                      {!isMaint && (
+                        <button
+                          className="btn btn-danger btn-sm btn-icon"
+                          onClick={() => onDelete(asset.asset_id)}
+                          title="Delete asset"
+                        >
+                          🗑️
+                        </button>
+                      )}
                     </div>
                   </td>
                 </tr>
@@ -84,7 +164,7 @@ const AssetTable = ({ assets, onEdit, onDelete, onTransaction, assignments = [],
             })}
             {assets.length === 0 && (
               <tr>
-                <td colSpan="7">
+                <td colSpan={isMaint ? "8" : "7"}>
                   <div className="empty-state">
                     <div className="empty-icon">📭</div>
                     <p>No assets found</p>

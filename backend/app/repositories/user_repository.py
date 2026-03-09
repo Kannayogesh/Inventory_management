@@ -202,3 +202,28 @@ def create_user(employee_code: str, full_name: str, email: str, password: str, r
 
     conn.commit()
     conn.close()
+
+def delete_user(user_id: int) -> bool:
+    """Hard delete a user and their associated records. Returns True if successful."""
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    try:
+        # Delete dependencies
+        cursor.execute("DELETE FROM Asset_Assignment WHERE user_id = ? OR approved_by = ?", (user_id, user_id))
+        cursor.execute("DELETE FROM Maintenance_Request WHERE reported_by = ?", (user_id,))
+        cursor.execute("DELETE FROM Procurement_Request WHERE requested_by = ? OR approved_by = ?", (user_id, user_id))
+        cursor.execute("DELETE FROM Asset_Log WHERE performed_by = ?", (user_id,))
+        
+        # Finally delete the user
+        cursor.execute("DELETE FROM Users WHERE user_id = ?", (user_id,))
+        conn.commit()
+        success = cursor.rowcount > 0
+        conn.close()
+        return success
+    except Exception as e:
+        print(f"Error deleting user: {e}")
+        if conn:
+            conn.rollback()
+            conn.close()
+        return False
+

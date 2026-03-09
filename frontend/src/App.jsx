@@ -7,6 +7,7 @@ import Dashboard from "./pages/Dashboard";
 import EmployeeDashboard from "./pages/EmployeeDashboard";
 import UserSearch from "./pages/UserSearch";
 import Assignments from "./pages/Assignments";
+import Analytics from "./pages/Analytics";
 import ProtectedRoute from "./routes/ProtectedRoute";
 
 function App() {
@@ -53,6 +54,14 @@ function App() {
               element={
                 <ProtectedRoute>
                   <Assignments />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/analytics"
+              element={
+                <ProtectedRoute>
+                  <Analytics />
                 </ProtectedRoute>
               }
             />

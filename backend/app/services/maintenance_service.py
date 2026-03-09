@@ -43,10 +43,11 @@ def create_request(request_data: MaintenanceCreate, current_user: dict, backgrou
     
     return get_request(new_id)
 
-def update_request(maintenance_id: int, request_data: MaintenanceUpdate, background_tasks: BackgroundTasks):
+def update_request(maintenance_id: int, request_data: MaintenanceUpdate, background_tasks: BackgroundTasks, current_user: dict):
     updates = request_data.model_dump(exclude_unset=True)
     
-    if updates.get("status") == "Resolved":
+    status_val = updates.get("status")
+    if status_val == "Resolved":
         updates["resolved_date"] = datetime.now()
         
     success = maintenance_repository.update_maintenance_request(maintenance_id, updates)
@@ -55,16 +56,25 @@ def update_request(maintenance_id: int, request_data: MaintenanceUpdate, backgro
         
     request = get_request(maintenance_id)
     
-    if request["status"] == "Resolved":
-        asset_repository.update_asset(request["asset_id"], {
-            "status": "Available",
-            "condition_status": "Good"
-        })
+    if status_val:
+        maintenance_repository.record_maintenance_history(
+            maintenance_id=maintenance_id,
+            status=status_val,
+            notes=request_data.remarks or f"Status changed to {status_val}",
+            performed_by=current_user.get("user_id")
+        )
         
-        # We need the user email to notify them
-        user = user_repository.get_user_by_email(request["reported_by"]) # assumes ID fetching added later if needed, passing blank for now if none (needs user ID to email match)
-        
-        # In current repo, reported_by is the user_id integer.
+        asset_update = {}
+        if status_val == "Resolved":
+            asset_update = {"status": "Available", "condition_status": "Good"}
+        elif status_val == "Under Process":
+            asset_update = {"status": "Maintenance"}
+        elif status_val == "Cannot Be Resolved":
+            asset_update = {"status": "Retired", "condition_status": "Damaged"}
+            
+        if asset_update:
+            asset_repository.update_asset(request["asset_id"], asset_update)
+            
         conn = user_repository.get_db_connection()
         cursor = conn.cursor()
         cursor.execute("SELECT full_name, email FROM Users WHERE user_id = ?", (request["reported_by"],))
@@ -74,12 +84,28 @@ def update_request(maintenance_id: int, request_data: MaintenanceUpdate, backgro
         if user_row:
             user_full_name = getattr(user_row, 'full_name', user_row[0])
             user_email = getattr(user_row, 'email', user_row[1])
-
-            background_tasks.add_task(
-                send_email_background_task,
-                title=f"Maintenance Resolved - Asset #{request['asset_id']}",
-                body=f"Hello {user_full_name},\n\nThe maintenance request for the asset you reported has been resolved.",
-                recipient=user_email
-            )
+            
+            email_subject = ""
+            email_body = ""
+            if status_val == "Under Process":
+                email_subject = "Asset Under Maintenance"
+                email_body = f"Hello {user_full_name},\n\nYour assigned asset is currently under maintenance and is being repaired by the support team.\n\nContact management for further information.\n\nRegards\nAsset Management Team\nPAL Inventory System"
+            elif status_val == "Resolved":
+                email_subject = "Asset Maintenance Completed"
+                email_body = f"Hello {user_full_name},\n\nThe maintenance process for your assigned asset has been completed successfully.\nThe asset is now available.\n\nContact management for further information.\n\nRegards\nAsset Management Team\nPAL Inventory System"
+            elif status_val == "Cannot Be Resolved":
+                email_subject = "Asset Cannot Be Repaired"
+                email_body = f"Hello {user_full_name},\n\nThe assigned asset cannot be repaired and may require replacement or retirement.\n\nContact management for further information.\n\nRegards\nAsset Management Team\nPAL Inventory System"
+                
+            if email_subject:
+                background_tasks.add_task(
+                    send_email_background_task,
+                    title=email_subject,
+                    body=email_body,
+                    recipient=user_email
+                )
         
     return request
+
+def get_history(asset_id: int):
+    return maintenance_repository.get_maintenance_history_by_asset(asset_id)

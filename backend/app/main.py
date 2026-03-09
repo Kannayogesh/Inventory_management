@@ -1,5 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
+import os
 
 from app.core.exceptions import http_exception_handler, validation_exception_handler
 from fastapi.exceptions import RequestValidationError
@@ -23,6 +25,10 @@ app = FastAPI(
 
 @app.on_event("startup")
 def startup_event():
+    # Ensure uploads directory exists
+    if not os.path.exists("uploads"):
+        os.makedirs("uploads")
+        
     try:
         if get_user_count() == 0:
             create_user(
@@ -57,6 +63,17 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+import os
+from fastapi.staticfiles import StaticFiles
+
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+UPLOADS_DIR = os.path.join(BASE_DIR, "uploads")
+
+if not os.path.exists(UPLOADS_DIR):
+    os.makedirs(UPLOADS_DIR)
+
+app.mount("/uploads", StaticFiles(directory=UPLOADS_DIR), name="uploads")
 
 # Register exception handlers
 app.add_exception_handler(StarletteHTTPException, http_exception_handler)

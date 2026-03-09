@@ -89,21 +89,21 @@ const UserSearch = () => {
 
   const handleSaveEdit = async () => {
     if (!editingUser) return;
-    
+
     try {
       setEditLoading(true);
       const updated = await updateUser(editingUser.user_id, editForm);
-      
+
       // Update the users list
       const updatedUsers = users.map(u => u.user_id === editingUser.user_id ? updated : u);
       setUsers(updatedUsers);
-      
+
       // Update filtered users if searching
       if (filteredUsers.length > 0) {
         const updatedFiltered = filteredUsers.map(u => u.user_id === editingUser.user_id ? updated : u);
         setFilteredUsers(updatedFiltered);
       }
-      
+
       setEditingUser(null);
       setEditForm({});
       alert("User updated successfully!");
@@ -116,6 +116,29 @@ const UserSearch = () => {
   };
 
   const displayUsers = search.trim() && hasSearched ? filteredUsers : users;
+
+  const handleDeleteUser = async (userId) => {
+    if (!window.confirm("Are you sure you want to permanently remove this user? This cannot be undone.")) return;
+
+    try {
+      const response = await fetch(`${import.meta.env.VITE_API_URL || "http://127.0.0.1:8000/api"}/auth/users/${userId}`, {
+        method: "DELETE",
+        headers: {
+          "Authorization": `Bearer ${localStorage.getItem("token")}`
+        }
+      });
+
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.detail || "Failed to delete user");
+
+      setUsers(prev => prev.filter(u => u.user_id !== userId));
+      setFilteredUsers(prev => prev.filter(u => u.user_id !== userId));
+      alert("User deleted successfully");
+    } catch (error) {
+      console.error("Delete error:", error);
+      alert(error.message);
+    }
+  };
 
   return (
     <div className="app-shell">
@@ -151,8 +174,8 @@ const UserSearch = () => {
                 />
               </div>
               <div className="td-muted" style={{ marginTop: "8px", fontSize: "12px" }}>
-                {search.trim() 
-                  ? `Found ${filteredUsers.length} user${filteredUsers.length !== 1 ? 's' : ''}` 
+                {search.trim()
+                  ? `Found ${filteredUsers.length} user${filteredUsers.length !== 1 ? 's' : ''}`
                   : `Showing all ${users.length} user${users.length !== 1 ? 's' : ''}`
                 }
               </div>
@@ -183,23 +206,44 @@ const UserSearch = () => {
                         <td className="td-muted">{u.department || "—"}</td>
                         <td>{statusBadge(u.status)}</td>
                         <td>
-                          {user && user.role === "Admin" && (
-                            <button
-                              onClick={() => handleEditClick(u)}
-                              style={{
-                                padding: "4px 10px",
-                                fontSize: "12px",
-                                backgroundColor: "var(--accent)",
-                                color: "white",
-                                border: "none",
-                                borderRadius: "4px",
-                                cursor: "pointer",
-                              }}
-                            >
-                              Edit
-                            </button>
-                          )}
+                          <div className="action-btn-group" style={{ display: "flex", gap: "8px" }}>
+                            {user && user.role === "Admin" && (
+                              <>
+                                <button
+                                  onClick={() => handleEditClick(u)}
+                                  className="btn btn-sm"
+                                  style={{
+                                    padding: "4px 10px",
+                                    fontSize: "12px",
+                                    backgroundColor: "var(--accent)",
+                                    color: "white",
+                                    border: "none",
+                                    borderRadius: "4px",
+                                    cursor: "pointer",
+                                  }}
+                                >
+                                  Edit
+                                </button>
+                                <button
+                                  onClick={() => handleDeleteUser(u.user_id)}
+                                  className="btn btn-sm"
+                                  style={{
+                                    padding: "4px 10px",
+                                    fontSize: "12px",
+                                    backgroundColor: "var(--danger)",
+                                    color: "white",
+                                    border: "none",
+                                    borderRadius: "4px",
+                                    cursor: "pointer",
+                                  }}
+                                >
+                                  Delete
+                                </button>
+                              </>
+                            )}
+                          </div>
                         </td>
+
                       </tr>
                     ))}
                     {displayUsers.length === 0 && !loading && (
