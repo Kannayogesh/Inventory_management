@@ -1,3 +1,5 @@
+import { BASE_URL } from '../api';
+
 const statusBadge = (status) => {
   const s = (status || "").toLowerCase();
   if (s === "available") return <span className="badge badge-success">{status}</span>;
@@ -113,20 +115,19 @@ const AssetTable = ({ assets, onEdit, onDelete, onTransaction, assignments = [],
                   <td>
                     <div className="action-btn-group">
                       {asset.invoice_path && !isMaint && (
-                        <a
-                          href={
-                            asset.invoice_path.startsWith('http')
-                              ? asset.invoice_path
-                              : `http://127.0.0.1:8000/uploads/${asset.invoice_path.replace(/^(\/)?uploads[\/\\]/, '').replace(/^\//, '')}`
-                          }
-                          target="_blank"
-                          rel="noreferrer"
+                        <button
                           className="btn btn-ghost btn-sm btn-icon"
+                          onClick={() => {
+                            const url = asset.invoice_path.startsWith('http')
+                              ? asset.invoice_path
+                              : `${BASE_URL}${asset.invoice_path.startsWith('/') ? '' : '/'}${asset.invoice_path}`;
+                            window.open(url, "_blank");
+                          }}
                           title="View Invoice"
                           style={{ fontSize: "14px" }}
                         >
                           📄
-                        </a>
+                        </button>
                       )}
 
                       {!isMaint && (
